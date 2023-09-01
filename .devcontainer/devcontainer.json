@@ -1,0 +1,9 @@
+{
+  "name": "C++",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {}
+  }
+}
