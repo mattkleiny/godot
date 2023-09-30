@@ -53,12 +53,15 @@ private:
 	jmethodID _finish = nullptr;
 	jmethodID _set_keep_screen_on = nullptr;
 	jmethodID _alert = nullptr;
+	jmethodID _is_dark_mode_supported = nullptr;
+	jmethodID _is_dark_mode = nullptr;
 	jmethodID _get_clipboard = nullptr;
 	jmethodID _set_clipboard = nullptr;
 	jmethodID _has_clipboard = nullptr;
 	jmethodID _request_permission = nullptr;
 	jmethodID _request_permissions = nullptr;
 	jmethodID _get_granted_permissions = nullptr;
+	jmethodID _get_gdextension_list_config_file = nullptr;
 	jmethodID _get_ca_certificates = nullptr;
 	jmethodID _init_input_devices = nullptr;
 	jmethodID _vibrate = nullptr;
@@ -85,6 +88,8 @@ public:
 	bool force_quit(JNIEnv *p_env = nullptr, int p_instance_id = 0);
 	void set_keep_screen_on(bool p_enabled);
 	void alert(const String &p_message, const String &p_title);
+	bool is_dark_mode_supported();
+	bool is_dark_mode();
 	bool has_get_clipboard();
 	String get_clipboard();
 	bool has_set_clipboard();
@@ -102,6 +107,9 @@ public:
 	void begin_benchmark_measure(const String &p_label);
 	void end_benchmark_measure(const String &p_label);
 	void dump_benchmark(const String &benchmark_file);
+
+	// Return the list of gdextensions config file.
+	Vector<String> get_gdextension_list_config_file() const;
 };
 
 #endif // JAVA_GODOT_WRAPPER_H

@@ -191,7 +191,6 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_stylebox("hover", "MenuBar", button_hover);
 	theme->set_stylebox("pressed", "MenuBar", button_pressed);
 	theme->set_stylebox("disabled", "MenuBar", button_disabled);
-	theme->set_stylebox("focus", "MenuBar", focus);
 
 	theme->set_font("font", "MenuBar", Ref<Font>());
 	theme->set_font_size("font_size", "MenuBar", -1);
@@ -360,6 +359,28 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("check_v_offset", "CheckButton", 0);
 	theme->set_constant("outline_size", "CheckButton", 0);
 
+	// Button variations
+
+	theme->set_type_variation("FlatButton", "Button");
+	theme->set_type_variation("FlatMenuButton", "MenuButton");
+
+	Ref<StyleBoxEmpty> flat_button_normal = make_empty_stylebox();
+	for (int i = 0; i < 4; i++) {
+		flat_button_normal->set_content_margin((Side)i, button_normal->get_margin((Side)i) + button_normal->get_border_width((Side)i));
+	}
+	Ref<StyleBoxFlat> flat_button_pressed = button_pressed->duplicate();
+	flat_button_pressed->set_bg_color(style_pressed_color * Color(1, 1, 1, 0.85));
+
+	theme->set_stylebox("normal", "FlatButton", flat_button_normal);
+	theme->set_stylebox("hover", "FlatButton", flat_button_normal);
+	theme->set_stylebox("pressed", "FlatButton", flat_button_pressed);
+	theme->set_stylebox("disabled", "FlatButton", flat_button_normal);
+
+	theme->set_stylebox("normal", "FlatMenuButton", flat_button_normal);
+	theme->set_stylebox("hover", "FlatMenuButton", flat_button_normal);
+	theme->set_stylebox("pressed", "FlatMenuButton", flat_button_pressed);
+	theme->set_stylebox("disabled", "FlatMenuButton", flat_button_normal);
+
 	// Label
 
 	theme->set_stylebox("normal", "Label", memnew(StyleBoxEmpty));
@@ -429,7 +450,6 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_font_size("font_size", "ProgressBar", -1);
 
 	theme->set_color("font_color", "ProgressBar", control_font_hover_color);
-	theme->set_color("font_shadow_color", "ProgressBar", Color(0, 0, 0));
 	theme->set_color("font_outline_color", "ProgressBar", Color(1, 1, 1));
 
 	theme->set_constant("outline_size", "ProgressBar", 0);
@@ -478,6 +498,8 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_icon("executing_line", "CodeEdit", icons["arrow_right"]);
 	theme->set_icon("can_fold", "CodeEdit", icons["arrow_down"]);
 	theme->set_icon("folded", "CodeEdit", icons["arrow_right"]);
+	theme->set_icon("can_fold_code_region", "CodeEdit", icons["folder_down_arrow"]);
+	theme->set_icon("folded_code_region", "CodeEdit", icons["folder_right_arrow"]);
 	theme->set_icon("folded_eol_icon", "CodeEdit", icons["text_edit_ellipsis"]);
 
 	theme->set_font("font", "CodeEdit", Ref<Font>());
@@ -489,7 +511,6 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("completion_existing_color", "CodeEdit", Color(0.87, 0.87, 0.87, 0.13));
 	theme->set_color("completion_scroll_color", "CodeEdit", control_font_pressed_color * Color(1, 1, 1, 0.29));
 	theme->set_color("completion_scroll_hovered_color", "CodeEdit", control_font_pressed_color * Color(1, 1, 1, 0.4));
-	theme->set_color("completion_font_color", "CodeEdit", Color(0.67, 0.67, 0.67));
 	theme->set_color("font_color", "CodeEdit", control_font_color);
 	theme->set_color("font_selected_color", "CodeEdit", Color(0, 0, 0, 0));
 	theme->set_color("font_readonly_color", "CodeEdit", Color(control_font_color.r, control_font_color.g, control_font_color.b, 0.5f));
@@ -501,6 +522,7 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_color("executing_line_color", "CodeEdit", Color(0.98, 0.89, 0.27));
 	theme->set_color("current_line_color", "CodeEdit", Color(0.25, 0.25, 0.26, 0.8));
 	theme->set_color("code_folding_color", "CodeEdit", Color(0.8, 0.8, 0.8, 0.8));
+	theme->set_color("folded_code_region_color", "CodeEdit", Color(0.68, 0.46, 0.77, 0.2));
 	theme->set_color("caret_color", "CodeEdit", control_font_color);
 	theme->set_color("caret_background_color", "CodeEdit", Color(0, 0, 0));
 	theme->set_color("brace_mismatch_color", "CodeEdit", Color(1, 0.2, 0.2));
@@ -655,11 +677,8 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	Ref<StyleBoxFlat> style_popup_panel = make_flat_stylebox(style_popup_color);
 	style_popup_panel->set_border_width_all(2);
 	style_popup_panel->set_border_color(style_popup_border_color);
-	Ref<StyleBoxFlat> style_popup_panel_disabled = style_popup_panel->duplicate();
-	style_popup_panel_disabled->set_bg_color(style_disabled_color);
 
 	theme->set_stylebox("panel", "PopupMenu", style_popup_panel);
-	theme->set_stylebox("panel_disabled", "PopupMenu", style_popup_panel_disabled);
 	theme->set_stylebox("hover", "PopupMenu", make_flat_stylebox(style_popup_hover_color));
 	theme->set_stylebox("separator", "PopupMenu", separator_horizontal);
 	theme->set_stylebox("labeled_separator_left", "PopupMenu", separator_horizontal);
@@ -699,40 +718,43 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_constant("icon_max_width", "PopupMenu", 0);
 
 	// GraphNode
-	Ref<StyleBoxFlat> graphnode_normal = make_flat_stylebox(style_normal_color, 18, 42, 18, 12);
-	graphnode_normal->set_border_width(SIDE_TOP, 30);
+
+	Ref<StyleBoxFlat> graphnode_normal = make_flat_stylebox(style_normal_color, 18, 12, 18, 12);
 	graphnode_normal->set_border_color(Color(0.325, 0.325, 0.325, 0.6));
 	Ref<StyleBoxFlat> graphnode_selected = graphnode_normal->duplicate();
 	graphnode_selected->set_border_color(Color(0.625, 0.625, 0.625, 0.6));
-	Ref<StyleBoxFlat> graphnode_comment_normal = make_flat_stylebox(style_pressed_color, 18, 42, 18, 12, 3, true, 2);
-	graphnode_comment_normal->set_border_color(style_pressed_color);
-	Ref<StyleBoxFlat> graphnode_comment_selected = graphnode_comment_normal->duplicate();
-	graphnode_comment_selected->set_border_color(style_hover_color);
-	Ref<StyleBoxFlat> graphnode_breakpoint = make_flat_stylebox(style_pressed_color, 18, 42, 18, 12, 6, true, 4);
-	graphnode_breakpoint->set_border_color(Color(0.9, 0.29, 0.3));
-	Ref<StyleBoxFlat> graphnode_position = make_flat_stylebox(style_pressed_color, 18, 42, 18, 12, 6, true, 4);
-	graphnode_position->set_border_color(Color(0.98, 0.89, 0.27));
+
+	Ref<StyleBoxFlat> graphn_sb_titlebar = make_flat_stylebox(style_normal_color.lightened(0.3), 4, 4, 4, 4);
+	Ref<StyleBoxFlat> graphn_sb_titlebar_selected = graphnode_normal->duplicate();
+	graphn_sb_titlebar_selected->set_bg_color(Color(1.0, 0.625, 0.625, 0.6));
 	Ref<StyleBoxEmpty> graphnode_slot = make_empty_stylebox(0, 0, 0, 0);
 
-	theme->set_stylebox("frame", "GraphNode", graphnode_normal);
-	theme->set_stylebox("selected_frame", "GraphNode", graphnode_selected);
-	theme->set_stylebox("breakpoint", "GraphNode", graphnode_breakpoint);
-	theme->set_stylebox("position", "GraphNode", graphnode_position);
+	theme->set_stylebox("panel", "GraphNode", graphnode_normal);
+	theme->set_stylebox("panel_selected", "GraphNode", graphnode_selected);
+	theme->set_stylebox("titlebar", "GraphNode", graphn_sb_titlebar);
+	theme->set_stylebox("titlebar_selected", "GraphNode", graphn_sb_titlebar_selected);
 	theme->set_stylebox("slot", "GraphNode", graphnode_slot);
-
 	theme->set_icon("port", "GraphNode", icons["graph_port"]);
-	theme->set_icon("close", "GraphNode", icons["close"]);
 	theme->set_icon("resizer", "GraphNode", icons["resizer_se"]);
-	theme->set_font("title_font", "GraphNode", Ref<Font>());
-	theme->set_color("title_color", "GraphNode", control_font_color);
-	theme->set_color("close_color", "GraphNode", control_font_color);
 	theme->set_color("resizer_color", "GraphNode", control_font_color);
 	theme->set_constant("separation", "GraphNode", Math::round(2 * scale));
-	theme->set_constant("title_offset", "GraphNode", Math::round(26 * scale));
-	theme->set_constant("title_h_offset", "GraphNode", 0);
-	theme->set_constant("close_offset", "GraphNode", Math::round(22 * scale));
-	theme->set_constant("close_h_offset", "GraphNode", Math::round(12 * scale));
-	theme->set_constant("port_offset", "GraphNode", 0);
+	theme->set_constant("port_h_offset", "GraphNode", 0);
+
+	// GraphNodes's title Label.
+
+	theme->set_type_variation("GraphNodeTitleLabel", "Label");
+
+	theme->set_stylebox("normal", "GraphNodeTitleLabel", make_empty_stylebox(0, 0, 0, 0));
+	theme->set_font("font", "GraphNodeTitleLabel", Ref<Font>());
+	theme->set_font_size("font_size", "GraphNodeTitleLabel", -1);
+	theme->set_color("font_color", "GraphNodeTitleLabel", control_font_color);
+	theme->set_color("font_shadow_color", "GraphNodeTitleLabel", Color(0, 0, 0, 0));
+	theme->set_color("font_outline_color", "GraphNodeTitleLabel", control_font_color);
+	theme->set_constant("shadow_offset_x", "GraphNodeTitleLabel", Math::round(1 * scale));
+	theme->set_constant("shadow_offset_y", "GraphNodeTitleLabel", Math::round(1 * scale));
+	theme->set_constant("outline_size", "GraphNodeTitleLabel", 0);
+	theme->set_constant("shadow_outline_size", "GraphNodeTitleLabel", Math::round(1 * scale));
+	theme->set_constant("line_spacing", "GraphNodeTitleLabel", Math::round(3 * scale));
 
 	// Tree
 
@@ -839,11 +861,13 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	style_tab_disabled->set_bg_color(style_disabled_color);
 	Ref<StyleBoxFlat> style_tab_hovered = style_tab_unselected->duplicate();
 	style_tab_hovered->set_bg_color(Color(0.1, 0.1, 0.1, 0.3));
+	Ref<StyleBoxFlat> style_tab_focus = focus->duplicate();
 
 	theme->set_stylebox("tab_selected", "TabContainer", style_tab_selected);
 	theme->set_stylebox("tab_hovered", "TabContainer", style_tab_hovered);
 	theme->set_stylebox("tab_unselected", "TabContainer", style_tab_unselected);
 	theme->set_stylebox("tab_disabled", "TabContainer", style_tab_disabled);
+	theme->set_stylebox("tab_focus", "TabContainer", style_tab_focus);
 	theme->set_stylebox("panel", "TabContainer", make_flat_stylebox(style_normal_color, 0, 0, 0, 0));
 	theme->set_stylebox("tabbar_background", "TabContainer", make_empty_stylebox(0, 0, 0, 0));
 
@@ -876,6 +900,7 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 	theme->set_stylebox("tab_hovered", "TabBar", style_tab_hovered);
 	theme->set_stylebox("tab_unselected", "TabBar", style_tab_unselected);
 	theme->set_stylebox("tab_disabled", "TabBar", style_tab_disabled);
+	theme->set_stylebox("tab_focus", "TabBar", style_tab_focus);
 	theme->set_stylebox("button_pressed", "TabBar", button_pressed);
 	theme->set_stylebox("button_highlight", "TabBar", button_normal);
 
@@ -1022,9 +1047,11 @@ void fill_default_theme(Ref<Theme> &theme, const Ref<Font> &default_font, const 
 
 	// TooltipPanel + TooltipLabel
 
+	theme->set_type_variation("TooltipPanel", "PopupPanel");
 	theme->set_stylebox("panel", "TooltipPanel",
 			make_flat_stylebox(Color(0, 0, 0, 0.5), 2 * default_margin, 0.5 * default_margin, 2 * default_margin, 0.5 * default_margin));
 
+	theme->set_type_variation("TooltipLabel", "Label");
 	theme->set_font_size("font_size", "TooltipLabel", -1);
 	theme->set_font("font", "TooltipLabel", Ref<Font>());
 

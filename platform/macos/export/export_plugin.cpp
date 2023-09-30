@@ -41,6 +41,7 @@
 #include "editor/editor_node.h"
 #include "editor/editor_paths.h"
 #include "editor/editor_scale.h"
+#include "editor/editor_string_names.h"
 #include "editor/import/resource_importer_texture_settings.h"
 #include "scene/resources/image_texture.h"
 
@@ -383,6 +384,7 @@ void EditorExportPlatformMacOS::get_export_options(List<ExportOption> *r_options
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/copyright"), ""));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::DICTIONARY, "application/copyright_localized", PROPERTY_HINT_LOCALIZABLE_STRING), Dictionary()));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "application/min_macos_version"), "10.12"));
+	r_options->push_back(ExportOption(PropertyInfo(Variant::INT, "application/export_angle", PROPERTY_HINT_ENUM, "Auto,Yes,No"), 0, true));
 	r_options->push_back(ExportOption(PropertyInfo(Variant::BOOL, "display/high_res"), true));
 
 	r_options->push_back(ExportOption(PropertyInfo(Variant::STRING, "xcode/platform_build"), "14C18"));
@@ -1617,6 +1619,14 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 	// Now process our template.
 	bool found_binary = false;
 
+	int export_angle = p_preset->get("application/export_angle");
+	bool include_angle_libs = false;
+	if (export_angle == 0) {
+		include_angle_libs = String(GLOBAL_GET("rendering/gl_compatibility/driver.macos")) == "opengl3_angle";
+	} else if (export_angle == 1) {
+		include_angle_libs = true;
+	}
+
 	while (ret == UNZ_OK && err == OK) {
 		// Get filename.
 		unz_file_info info;
@@ -1662,6 +1672,20 @@ Error EditorExportPlatformMacOS::export_project(const Ref<EditorExportPreset> &p
 
 			ret = unzGoToNextFile(src_pkg_zip);
 			continue; // next
+		}
+
+		if (file == "Contents/Frameworks/libEGL.dylib") {
+			if (!include_angle_libs) {
+				ret = unzGoToNextFile(src_pkg_zip);
+				continue; // skip
+			}
+		}
+
+		if (file == "Contents/Frameworks/libGLESv2.dylib") {
+			if (!include_angle_libs) {
+				ret = unzGoToNextFile(src_pkg_zip);
+				continue; // skip
+			}
 		}
 
 		if (file == "Contents/Info.plist") {
@@ -2460,7 +2484,7 @@ EditorExportPlatformMacOS::EditorExportPlatformMacOS() {
 
 		Ref<Theme> theme = EditorNode::get_singleton()->get_editor_theme();
 		if (theme.is_valid()) {
-			stop_icon = theme->get_icon(SNAME("Stop"), SNAME("EditorIcons"));
+			stop_icon = theme->get_icon(SNAME("Stop"), EditorStringName(EditorIcons));
 		} else {
 			stop_icon.instantiate();
 		}
