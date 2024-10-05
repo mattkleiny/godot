@@ -34,18 +34,18 @@
 #include "core/math/quaternion.h"
 #include "core/math/vector3.h"
 
-struct _NO_DISCARD_ Basis {
+struct [[nodiscard]] Basis {
 	Vector3 rows[3] = {
 		Vector3(1, 0, 0),
 		Vector3(0, 1, 0),
 		Vector3(0, 0, 1)
 	};
 
-	_FORCE_INLINE_ const Vector3 &operator[](int p_axis) const {
-		return rows[p_axis];
+	_FORCE_INLINE_ const Vector3 &operator[](int p_row) const {
+		return rows[p_row];
 	}
-	_FORCE_INLINE_ Vector3 &operator[](int p_axis) {
-		return rows[p_axis];
+	_FORCE_INLINE_ Vector3 &operator[](int p_row) {
+		return rows[p_row];
 	}
 
 	void invert();
@@ -103,7 +103,7 @@ struct _NO_DISCARD_ Basis {
 
 	Vector3 get_scale() const;
 	Vector3 get_scale_abs() const;
-	Vector3 get_scale_local() const;
+	Vector3 get_scale_global() const;
 
 	void set_axis_angle_scale(const Vector3 &p_axis, real_t p_angle, const Vector3 &p_scale);
 	void set_euler_scale(const Vector3 &p_euler, const Vector3 &p_scale, EulerOrder p_order = EulerOrder::YXZ);

@@ -136,7 +136,7 @@ bool GodotNavigationServer3D::map_is_active(RID p_map) const {
 	NavMap *map = map_owner.get_or_null(p_map);
 	ERR_FAIL_NULL_V(map, false);
 
-	return active_maps.find(map) >= 0;
+	return active_maps.has(map);
 }
 
 COMMAND_2(map_set_up, RID, p_map, Vector3, p_up) {
@@ -486,7 +486,7 @@ COMMAND_2(region_set_navigation_mesh, RID, p_region, Ref<NavigationMesh>, p_navi
 	NavRegion *region = region_owner.get_or_null(p_region);
 	ERR_FAIL_NULL(region);
 
-	region->set_mesh(p_navigation_mesh);
+	region->set_navigation_mesh(p_navigation_mesh);
 }
 
 #ifndef DISABLE_DEPRECATED
@@ -509,22 +509,52 @@ void GodotNavigationServer3D::region_bake_navigation_mesh(Ref<NavigationMesh> p_
 int GodotNavigationServer3D::region_get_connections_count(RID p_region) const {
 	NavRegion *region = region_owner.get_or_null(p_region);
 	ERR_FAIL_NULL_V(region, 0);
-
-	return region->get_connections_count();
+	NavMap *map = region->get_map();
+	if (map) {
+		return map->get_region_connections_count(region);
+	}
+	return 0;
 }
 
 Vector3 GodotNavigationServer3D::region_get_connection_pathway_start(RID p_region, int p_connection_id) const {
 	NavRegion *region = region_owner.get_or_null(p_region);
 	ERR_FAIL_NULL_V(region, Vector3());
-
-	return region->get_connection_pathway_start(p_connection_id);
+	NavMap *map = region->get_map();
+	if (map) {
+		return map->get_region_connection_pathway_start(region, p_connection_id);
+	}
+	return Vector3();
 }
 
 Vector3 GodotNavigationServer3D::region_get_connection_pathway_end(RID p_region, int p_connection_id) const {
 	NavRegion *region = region_owner.get_or_null(p_region);
 	ERR_FAIL_NULL_V(region, Vector3());
+	NavMap *map = region->get_map();
+	if (map) {
+		return map->get_region_connection_pathway_end(region, p_connection_id);
+	}
+	return Vector3();
+}
 
-	return region->get_connection_pathway_end(p_connection_id);
+Vector3 GodotNavigationServer3D::region_get_closest_point_to_segment(RID p_region, const Vector3 &p_from, const Vector3 &p_to, bool p_use_collision) const {
+	const NavRegion *region = region_owner.get_or_null(p_region);
+	ERR_FAIL_NULL_V(region, Vector3());
+
+	return region->get_closest_point_to_segment(p_from, p_to, p_use_collision);
+}
+
+Vector3 GodotNavigationServer3D::region_get_closest_point(RID p_region, const Vector3 &p_point) const {
+	const NavRegion *region = region_owner.get_or_null(p_region);
+	ERR_FAIL_NULL_V(region, Vector3());
+
+	return region->get_closest_point_info(p_point).point;
+}
+
+Vector3 GodotNavigationServer3D::region_get_closest_point_normal(RID p_region, const Vector3 &p_point) const {
+	const NavRegion *region = region_owner.get_or_null(p_region);
+	ERR_FAIL_NULL_V(region, Vector3());
+
+	return region->get_closest_point_info(p_point).normal;
 }
 
 Vector3 GodotNavigationServer3D::region_get_random_point(RID p_region, uint32_t p_navigation_layers, bool p_uniformly) const {
@@ -1202,6 +1232,11 @@ COMMAND_1(free, RID, p_object) {
 	} else if (obstacle_owner.owns(p_object)) {
 		internal_free_obstacle(p_object);
 
+#ifndef _3D_DISABLED
+	} else if (navmesh_generator_3d && navmesh_generator_3d->owns(p_object)) {
+		navmesh_generator_3d->free(p_object);
+#endif // _3D_DISABLED
+
 	} else {
 		ERR_PRINT("Attempted to free a NavigationServer RID that did not exist (or was already freed).");
 	}
@@ -1293,6 +1328,7 @@ void GodotNavigationServer3D::process(real_t p_delta_time) {
 	int _new_pm_edge_merge_count = 0;
 	int _new_pm_edge_connection_count = 0;
 	int _new_pm_edge_free_count = 0;
+	int _new_pm_obstacle_count = 0;
 
 	// In c++ we can't be sure that this is performed in the main thread
 	// even with mutable functions.
@@ -1310,6 +1346,7 @@ void GodotNavigationServer3D::process(real_t p_delta_time) {
 		_new_pm_edge_merge_count += active_maps[i]->get_pm_edge_merge_count();
 		_new_pm_edge_connection_count += active_maps[i]->get_pm_edge_connection_count();
 		_new_pm_edge_free_count += active_maps[i]->get_pm_edge_free_count();
+		_new_pm_obstacle_count += active_maps[i]->get_pm_obstacle_count();
 
 		// Emit a signal if a map changed.
 		const uint32_t new_map_iteration_id = active_maps[i]->get_iteration_id();
@@ -1327,6 +1364,7 @@ void GodotNavigationServer3D::process(real_t p_delta_time) {
 	pm_edge_merge_count = _new_pm_edge_merge_count;
 	pm_edge_connection_count = _new_pm_edge_connection_count;
 	pm_edge_free_count = _new_pm_edge_free_count;
+	pm_obstacle_count = _new_pm_obstacle_count;
 }
 
 void GodotNavigationServer3D::init() {
@@ -1381,9 +1419,155 @@ PathQueryResult GodotNavigationServer3D::_query_path(const PathQueryParameters &
 
 	// add path postprocessing
 
+	if (r_query_result.path.size() > 2 && p_parameters.simplify_path) {
+		const LocalVector<uint32_t> &simplified_path_indices = get_simplified_path_indices(r_query_result.path, p_parameters.simplify_epsilon);
+
+		uint32_t indices_count = simplified_path_indices.size();
+
+		{
+			Vector3 *w = r_query_result.path.ptrw();
+			const Vector3 *r = r_query_result.path.ptr();
+			for (uint32_t i = 0; i < indices_count; i++) {
+				w[i] = r[simplified_path_indices[i]];
+			}
+			r_query_result.path.resize(indices_count);
+		}
+
+		if (p_parameters.metadata_flags.has_flag(PathMetadataFlags::PATH_INCLUDE_TYPES)) {
+			int32_t *w = r_query_result.path_types.ptrw();
+			const int32_t *r = r_query_result.path_types.ptr();
+			for (uint32_t i = 0; i < indices_count; i++) {
+				w[i] = r[simplified_path_indices[i]];
+			}
+			r_query_result.path_types.resize(indices_count);
+		}
+
+		if (p_parameters.metadata_flags.has_flag(PathMetadataFlags::PATH_INCLUDE_RIDS)) {
+			TypedArray<RID> simplified_path_rids;
+			simplified_path_rids.resize(indices_count);
+			for (uint32_t i = 0; i < indices_count; i++) {
+				simplified_path_rids[i] = r_query_result.path_rids[i];
+			}
+			r_query_result.path_rids = simplified_path_rids;
+		}
+
+		if (p_parameters.metadata_flags.has_flag(PathMetadataFlags::PATH_INCLUDE_OWNERS)) {
+			int64_t *w = r_query_result.path_owner_ids.ptrw();
+			const int64_t *r = r_query_result.path_owner_ids.ptr();
+			for (uint32_t i = 0; i < indices_count; i++) {
+				w[i] = r[simplified_path_indices[i]];
+			}
+			r_query_result.path_owner_ids.resize(indices_count);
+		}
+	}
+
 	// add path stats
 
 	return r_query_result;
+}
+
+RID GodotNavigationServer3D::source_geometry_parser_create() {
+#ifndef _3D_DISABLED
+	if (navmesh_generator_3d) {
+		return navmesh_generator_3d->source_geometry_parser_create();
+	}
+#endif // _3D_DISABLED
+	return RID();
+}
+
+void GodotNavigationServer3D::source_geometry_parser_set_callback(RID p_parser, const Callable &p_callback) {
+#ifndef _3D_DISABLED
+	if (navmesh_generator_3d) {
+		navmesh_generator_3d->source_geometry_parser_set_callback(p_parser, p_callback);
+	}
+#endif // _3D_DISABLED
+}
+
+Vector<Vector3> GodotNavigationServer3D::simplify_path(const Vector<Vector3> &p_path, real_t p_epsilon) {
+	if (p_path.size() <= 2) {
+		return p_path;
+	}
+
+	p_epsilon = MAX(0.0, p_epsilon);
+
+	LocalVector<uint32_t> simplified_path_indices = get_simplified_path_indices(p_path, p_epsilon);
+
+	uint32_t indices_count = simplified_path_indices.size();
+
+	Vector<Vector3> simplified_path;
+	simplified_path.resize(indices_count);
+
+	Vector3 *w = simplified_path.ptrw();
+	const Vector3 *r = p_path.ptr();
+	for (uint32_t i = 0; i < indices_count; i++) {
+		w[i] = r[simplified_path_indices[i]];
+	}
+
+	return simplified_path;
+}
+
+LocalVector<uint32_t> GodotNavigationServer3D::get_simplified_path_indices(const Vector<Vector3> &p_path, real_t p_epsilon) {
+	p_epsilon = MAX(0.0, p_epsilon);
+	real_t squared_epsilon = p_epsilon * p_epsilon;
+
+	LocalVector<bool> valid_points;
+	valid_points.resize(p_path.size());
+	for (uint32_t i = 0; i < valid_points.size(); i++) {
+		valid_points[i] = false;
+	}
+
+	simplify_path_segment(0, p_path.size() - 1, p_path, squared_epsilon, valid_points);
+
+	int valid_point_index = 0;
+
+	for (bool valid : valid_points) {
+		if (valid) {
+			valid_point_index += 1;
+		}
+	}
+
+	LocalVector<uint32_t> simplified_path_indices;
+	simplified_path_indices.resize(valid_point_index);
+	valid_point_index = 0;
+
+	for (uint32_t i = 0; i < valid_points.size(); i++) {
+		if (valid_points[i]) {
+			simplified_path_indices[valid_point_index] = i;
+			valid_point_index += 1;
+		}
+	}
+
+	return simplified_path_indices;
+}
+
+void GodotNavigationServer3D::simplify_path_segment(int p_start_inx, int p_end_inx, const Vector<Vector3> &p_points, real_t p_epsilon, LocalVector<bool> &r_valid_points) {
+	r_valid_points[p_start_inx] = true;
+	r_valid_points[p_end_inx] = true;
+
+	const Vector3 &start_point = p_points[p_start_inx];
+	const Vector3 &end_point = p_points[p_end_inx];
+
+	Vector3 path_segment[2] = { start_point, end_point };
+
+	real_t point_max_distance = 0.0;
+	int point_max_index = 0;
+
+	for (int i = p_start_inx; i < p_end_inx; i++) {
+		const Vector3 &checked_point = p_points[i];
+
+		const Vector3 closest_point = Geometry3D::get_closest_point_to_segment(checked_point, path_segment);
+		real_t distance_squared = closest_point.distance_squared_to(checked_point);
+
+		if (distance_squared > point_max_distance) {
+			point_max_index = i;
+			point_max_distance = distance_squared;
+		}
+	}
+
+	if (point_max_distance > p_epsilon) {
+		simplify_path_segment(p_start_inx, point_max_index, p_points, p_epsilon, r_valid_points);
+		simplify_path_segment(point_max_index, p_end_inx, p_points, p_epsilon, r_valid_points);
+	}
 }
 
 int GodotNavigationServer3D::get_process_info(ProcessInfo p_info) const {
@@ -1414,6 +1598,9 @@ int GodotNavigationServer3D::get_process_info(ProcessInfo p_info) const {
 		} break;
 		case INFO_EDGE_FREE_COUNT: {
 			return pm_edge_free_count;
+		} break;
+		case INFO_OBSTACLE_COUNT: {
+			return pm_obstacle_count;
 		} break;
 	}
 

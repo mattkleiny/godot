@@ -41,6 +41,9 @@
 
 class PackedScene;
 class Node;
+#ifndef _3D_DISABLED
+class Node3D;
+#endif
 class Window;
 class Material;
 class Mesh;
@@ -120,9 +123,15 @@ private:
 		bool changed = false;
 	};
 
+#ifndef _3D_DISABLED
+	struct ClientPhysicsInterpolation {
+		SelfList<Node3D>::List _node_3d_list;
+		void physics_process();
+	} _client_physics_interpolation;
+#endif
+
 	Window *root = nullptr;
 
-	uint64_t tree_version = 1;
 	double physics_process_time = 0.0;
 	double process_time = 0.0;
 	bool accept_quit = true;
@@ -134,7 +143,6 @@ private:
 	bool debug_navigation_hint = false;
 #endif
 	bool paused = false;
-	int root_lock = 0;
 
 	HashMap<StringName, Group> group_map;
 	bool _quit = false;
@@ -165,7 +173,6 @@ private:
 
 	// Safety for when a node is deleted while a group is being called.
 
-	bool processing = false;
 	int nodes_removed_on_group_call_lock = 0;
 	HashSet<Node *> nodes_removed_on_group_call; // Skip erased nodes.
 
@@ -318,6 +325,7 @@ public:
 	virtual void iteration_prepare() override;
 
 	virtual bool physics_process(double p_time) override;
+	virtual void iteration_end() override;
 	virtual bool process(double p_time) override;
 
 	virtual void finalize() override;
@@ -332,12 +340,6 @@ public:
 
 	_FORCE_INLINE_ double get_physics_process_time() const { return physics_process_time; }
 	_FORCE_INLINE_ double get_process_time() const { return process_time; }
-
-#ifdef TOOLS_ENABLED
-	bool is_node_being_edited(const Node *p_node) const;
-#else
-	bool is_node_being_edited(const Node *p_node) const { return false; }
-#endif
 
 	void set_pause(bool p_enabled);
 	bool is_paused() const;
@@ -431,6 +433,11 @@ public:
 
 	void set_physics_interpolation_enabled(bool p_enabled);
 	bool is_physics_interpolation_enabled() const;
+
+#ifndef _3D_DISABLED
+	void client_physics_interpolation_add_node_3d(SelfList<Node3D> *p_elem);
+	void client_physics_interpolation_remove_node_3d(SelfList<Node3D> *p_elem);
+#endif
 
 	SceneTree();
 	~SceneTree();

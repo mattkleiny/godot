@@ -95,6 +95,7 @@ class GodotNavigationServer3D : public NavigationServer3D {
 	int pm_edge_merge_count = 0;
 	int pm_edge_connection_count = 0;
 	int pm_edge_free_count = 0;
+	int pm_obstacle_count = 0;
 
 public:
 	GodotNavigationServer3D();
@@ -177,6 +178,9 @@ public:
 	virtual int region_get_connections_count(RID p_region) const override;
 	virtual Vector3 region_get_connection_pathway_start(RID p_region, int p_connection_id) const override;
 	virtual Vector3 region_get_connection_pathway_end(RID p_region, int p_connection_id) const override;
+	virtual Vector3 region_get_closest_point_to_segment(RID p_region, const Vector3 &p_from, const Vector3 &p_to, bool p_use_collision = false) const override;
+	virtual Vector3 region_get_closest_point(RID p_region, const Vector3 &p_point) const override;
+	virtual Vector3 region_get_closest_point_normal(RID p_region, const Vector3 &p_point) const override;
 	virtual Vector3 region_get_random_point(RID p_region, uint32_t p_navigation_layers, bool p_uniformly) const override;
 
 	virtual RID link_create() override;
@@ -264,6 +268,16 @@ public:
 	virtual void bake_from_source_geometry_data_async(const Ref<NavigationMesh> &p_navigation_mesh, const Ref<NavigationMeshSourceGeometryData3D> &p_source_geometry_data, const Callable &p_callback = Callable()) override;
 	virtual bool is_baking_navigation_mesh(Ref<NavigationMesh> p_navigation_mesh) const override;
 
+	virtual RID source_geometry_parser_create() override;
+	virtual void source_geometry_parser_set_callback(RID p_parser, const Callable &p_callback) override;
+
+	virtual Vector<Vector3> simplify_path(const Vector<Vector3> &p_path, real_t p_epsilon) override;
+
+private:
+	static void simplify_path_segment(int p_start_inx, int p_end_inx, const Vector<Vector3> &p_points, real_t p_epsilon, LocalVector<bool> &r_valid_points);
+	static LocalVector<uint32_t> get_simplified_path_indices(const Vector<Vector3> &p_path, real_t p_epsilon);
+
+public:
 	COMMAND_1(free, RID, p_object);
 
 	virtual void set_active(bool p_active) override;

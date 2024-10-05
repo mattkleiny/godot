@@ -55,11 +55,11 @@
 #include "scene/resources/mesh.h"
 #include "scene/resources/packed_scene.h"
 #include "scene/resources/world_2d.h"
-#include "scene/scene_string_names.h"
 #include "servers/display_server.h"
 #include "servers/navigation_server_3d.h"
 #include "servers/physics_server_2d.h"
 #ifndef _3D_DISABLED
+#include "scene/3d/node_3d.h"
 #include "scene/resources/3d/world_3d.h"
 #include "servers/physics_server_3d.h"
 #endif // _3D_DISABLED
@@ -119,8 +119,30 @@ void SceneTreeTimer::release_connections() {
 
 SceneTreeTimer::SceneTreeTimer() {}
 
+#ifndef _3D_DISABLED
+// This should be called once per physics tick, to make sure the transform previous and current
+// is kept up to date on the few Node3Ds that are using client side physics interpolation.
+void SceneTree::ClientPhysicsInterpolation::physics_process() {
+	for (SelfList<Node3D> *E = _node_3d_list.first(); E;) {
+		Node3D *node_3d = E->self();
+
+		SelfList<Node3D> *current = E;
+
+		// Get the next element here BEFORE we potentially delete one.
+		E = E->next();
+
+		// This will return false if the Node3D has timed out ..
+		// i.e. if get_global_transform_interpolated() has not been called
+		// for a few seconds, we can delete from the list to keep processing
+		// to a minimum.
+		if (!node_3d->update_client_physics_interpolation_data()) {
+			_node_3d_list.remove(current);
+		}
+	}
+}
+#endif
+
 void SceneTree::tree_changed() {
-	tree_version++;
 	emit_signal(tree_changed_name);
 }
 
@@ -153,7 +175,6 @@ SceneTree::Group *SceneTree::add_to_group(const StringName &p_group, Node *p_nod
 
 	ERR_FAIL_COND_V_MSG(E->value.nodes.has(p_node), &E->value, "Already in group: " + p_group + ".");
 	E->value.nodes.push_back(p_node);
-	//E->value.last_tree_version=0;
 	E->value.changed = true;
 	return &E->value;
 }
@@ -281,11 +302,15 @@ void SceneTree::call_group_flagsp(uint32_t p_call_flags, const StringName &p_gro
 				continue;
 			}
 
+			Node *node = gr_nodes[i];
 			if (!(p_call_flags & GROUP_CALL_DEFERRED)) {
 				Callable::CallError ce;
-				gr_nodes[i]->callp(p_function, p_args, p_argcount, ce);
+				node->callp(p_function, p_args, p_argcount, ce);
+				if (unlikely(ce.error != Callable::CallError::CALL_OK && ce.error != Callable::CallError::CALL_ERROR_INVALID_METHOD)) {
+					ERR_PRINT(vformat("Error calling group method on node \"%s\": %s.", node->get_name(), Variant::get_callable_error_text(Callable(node, p_function), p_args, p_argcount, ce)));
+				}
 			} else {
-				MessageQueue::get_singleton()->push_callp(gr_nodes[i], p_function, p_args, p_argcount);
+				MessageQueue::get_singleton()->push_callp(node, p_function, p_args, p_argcount);
 			}
 		}
 
@@ -295,11 +320,15 @@ void SceneTree::call_group_flagsp(uint32_t p_call_flags, const StringName &p_gro
 				continue;
 			}
 
+			Node *node = gr_nodes[i];
 			if (!(p_call_flags & GROUP_CALL_DEFERRED)) {
 				Callable::CallError ce;
-				gr_nodes[i]->callp(p_function, p_args, p_argcount, ce);
+				node->callp(p_function, p_args, p_argcount, ce);
+				if (unlikely(ce.error != Callable::CallError::CALL_OK && ce.error != Callable::CallError::CALL_ERROR_INVALID_METHOD)) {
+					ERR_PRINT(vformat("Error calling group method on node \"%s\": %s.", node->get_name(), Variant::get_callable_error_text(Callable(node, p_function), p_args, p_argcount, ce)));
+				}
 			} else {
-				MessageQueue::get_singleton()->push_callp(gr_nodes[i], p_function, p_args, p_argcount);
+				MessageQueue::get_singleton()->push_callp(node, p_function, p_args, p_argcount);
 			}
 		}
 	}
@@ -469,15 +498,35 @@ bool SceneTree::is_physics_interpolation_enabled() const {
 	return _physics_interpolation_enabled;
 }
 
+#ifndef _3D_DISABLED
+void SceneTree::client_physics_interpolation_add_node_3d(SelfList<Node3D> *p_elem) {
+	// This ensures that _update_physics_interpolation_data() will be called at least once every
+	// physics tick, to ensure the previous and current transforms are kept up to date.
+	_client_physics_interpolation._node_3d_list.add(p_elem);
+}
+
+void SceneTree::client_physics_interpolation_remove_node_3d(SelfList<Node3D> *p_elem) {
+	_client_physics_interpolation._node_3d_list.remove(p_elem);
+}
+#endif
+
 void SceneTree::iteration_prepare() {
 	if (_physics_interpolation_enabled) {
+		// Make sure any pending transforms from the last tick / frame
+		// are flushed before pumping the interpolation prev and currents.
+		flush_transform_notifications();
 		RenderingServer::get_singleton()->tick();
+
+#ifndef _3D_DISABLED
+		// Any objects performing client physics interpolation
+		// should be given an opportunity to keep their previous transforms
+		// up to date before each new physics tick.
+		_client_physics_interpolation.physics_process();
+#endif
 	}
 }
 
 bool SceneTree::physics_process(double p_time) {
-	root_lock++;
-
 	current_frame++;
 
 	flush_transform_notifications();
@@ -501,7 +550,6 @@ bool SceneTree::physics_process(double p_time) {
 	process_tweens(p_time, true);
 
 	flush_transform_notifications();
-	root_lock--;
 
 	_flush_delete_queue();
 	_call_idle_callbacks();
@@ -509,9 +557,15 @@ bool SceneTree::physics_process(double p_time) {
 	return _quit;
 }
 
-bool SceneTree::process(double p_time) {
-	root_lock++;
+void SceneTree::iteration_end() {
+	// When physics interpolation is active, we want all pending transforms
+	// to be flushed to the RenderingServer before finishing a physics tick.
+	if (_physics_interpolation_enabled) {
+		flush_transform_notifications();
+	}
+}
 
+bool SceneTree::process(double p_time) {
 	if (MainLoop::process(p_time)) {
 		_quit = true;
 	}
@@ -536,8 +590,6 @@ bool SceneTree::process(double p_time) {
 	_flush_ugc();
 	MessageQueue::get_singleton()->flush(); //small little hack
 	flush_transform_notifications(); //transforms after world update, to avoid unnecessary enter/exit notifications
-
-	root_lock--;
 
 	_flush_delete_queue();
 
@@ -579,6 +631,10 @@ bool SceneTree::process(double p_time) {
 	}
 #endif // _3D_DISABLED
 #endif // TOOLS_ENABLED
+
+	if (_physics_interpolation_enabled) {
+		RenderingServer::get_singleton()->pre_draw(true);
+	}
 
 	return _quit;
 }
@@ -737,13 +793,6 @@ bool SceneTree::is_quit_on_go_back() const {
 void SceneTree::set_quit_on_go_back(bool p_enable) {
 	quit_on_go_back = p_enable;
 }
-
-#ifdef TOOLS_ENABLED
-
-bool SceneTree::is_node_being_edited(const Node *p_node) const {
-	return Engine::get_singleton()->is_editor_hint() && edited_scene_root && (edited_scene_root->is_ancestor_of(p_node) || edited_scene_root == p_node);
-}
-#endif
 
 #ifdef DEBUG_ENABLED
 void SceneTree::set_debug_collisions_hint(bool p_enabled) {
@@ -1274,8 +1323,8 @@ void SceneTree::_call_group_flags(const Variant **p_args, int p_argcount, Callab
 
 	ERR_FAIL_COND(p_argcount < 3);
 	ERR_FAIL_COND(!p_args[0]->is_num());
-	ERR_FAIL_COND(p_args[1]->get_type() != Variant::STRING_NAME && p_args[1]->get_type() != Variant::STRING);
-	ERR_FAIL_COND(p_args[2]->get_type() != Variant::STRING_NAME && p_args[2]->get_type() != Variant::STRING);
+	ERR_FAIL_COND(!p_args[1]->is_string());
+	ERR_FAIL_COND(!p_args[2]->is_string());
 
 	int flags = *p_args[0];
 	StringName group = *p_args[1];
@@ -1288,8 +1337,8 @@ void SceneTree::_call_group(const Variant **p_args, int p_argcount, Callable::Ca
 	r_error.error = Callable::CallError::CALL_OK;
 
 	ERR_FAIL_COND(p_argcount < 2);
-	ERR_FAIL_COND(p_args[0]->get_type() != Variant::STRING_NAME && p_args[0]->get_type() != Variant::STRING);
-	ERR_FAIL_COND(p_args[1]->get_type() != Variant::STRING_NAME && p_args[1]->get_type() != Variant::STRING);
+	ERR_FAIL_COND(!p_args[0]->is_string());
+	ERR_FAIL_COND(!p_args[1]->is_string());
 
 	StringName group = *p_args[0];
 	StringName method = *p_args[1];
@@ -1761,7 +1810,7 @@ SceneTree::SceneTree() {
 	root = memnew(Window);
 	root->set_min_size(Size2i(64, 64)); // Define a very small minimum window size to prevent bugs such as GH-37242.
 	root->set_process_mode(Node::PROCESS_MODE_PAUSABLE);
-	root->set_auto_translate_mode(Node::AUTO_TRANSLATE_MODE_ALWAYS);
+	root->set_auto_translate_mode(GLOBAL_GET("internationalization/rendering/root_node_auto_translate") ? Node::AUTO_TRANSLATE_MODE_ALWAYS : Node::AUTO_TRANSLATE_MODE_DISABLED);
 	root->set_name("root");
 	root->set_title(GLOBAL_GET("application/config/name"));
 
@@ -1777,6 +1826,13 @@ SceneTree::SceneTree() {
 #endif // _3D_DISABLED
 
 	set_physics_interpolation_enabled(GLOBAL_DEF("physics/common/physics_interpolation", false));
+
+	// Always disable jitter fix if physics interpolation is enabled -
+	// Jitter fix will interfere with interpolation, and is not necessary
+	// when interpolation is active.
+	if (is_physics_interpolation_enabled()) {
+		Engine::get_singleton()->set_physics_jitter_fix(0);
+	}
 
 	// Initialize network state.
 	set_multiplayer(MultiplayerAPI::create_default_interface());
@@ -1892,7 +1948,7 @@ SceneTree::SceneTree() {
 
 	root->connect("close_requested", callable_mp(this, &SceneTree::_main_window_close));
 	root->connect("go_back_requested", callable_mp(this, &SceneTree::_main_window_go_back));
-	root->connect("focus_entered", callable_mp(this, &SceneTree::_main_window_focus_in));
+	root->connect(SceneStringName(focus_entered), callable_mp(this, &SceneTree::_main_window_focus_in));
 
 #ifdef TOOLS_ENABLED
 	edited_scene_root = nullptr;
