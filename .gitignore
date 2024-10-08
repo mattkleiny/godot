@@ -211,6 +211,9 @@ cscope.po.out
 *.code-workspace
 .history/
 
+# Zed
+.zed/
+
 # Xcode
 xcuserdata/
 *.xcscmblueprint
