@@ -2204,7 +2204,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	// Start with RenderingDevice-based backends.
 #ifdef RD_ENABLED
-	renderer_hints = "forward_plus,mobile";
+	renderer_hints = "forward_plus,pipeline,mobile";
 	default_renderer_mobile = "mobile";
 #endif
 
@@ -2231,7 +2231,8 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 	if (!rendering_method.is_empty()) {
 		if (rendering_method != "forward_plus" &&
 				rendering_method != "mobile" &&
-				rendering_method != "gl_compatibility") {
+				rendering_method != "gl_compatibility" &&
+				rendering_method != "pipeline") {
 			OS::get_singleton()->print("Unknown rendering method '%s', aborting.\nValid options are ",
 					rendering_method.utf8().get_data());
 
@@ -2354,6 +2355,7 @@ Error Main::setup(const char *execpath, int argc, char *argv[], bool p_second_ph
 
 	default_renderer = renderer_hints.get_slice(",", 0);
 	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::STRING, "rendering/renderer/rendering_method", PROPERTY_HINT_ENUM, renderer_hints), default_renderer);
+	GLOBAL_DEF_RST_BASIC(PropertyInfo(Variant::STRING, "rendering/renderer/rendering_pipeline", PROPERTY_HINT_ENUM, "forward_plus"), "forward_plus");
 	GLOBAL_DEF_RST_BASIC("rendering/renderer/rendering_method.mobile", default_renderer_mobile);
 	GLOBAL_DEF_RST_BASIC("rendering/renderer/rendering_method.web", "gl_compatibility"); // This is a bit of a hack until we have WebGPU support.
 

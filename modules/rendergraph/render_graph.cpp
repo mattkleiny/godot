@@ -3,5 +3,3 @@
 void RenderGraph::_bind_methods() {}
 
 void RenderGraphNode::_bind_methods() {}
-
-void RenderPassNode::_bind_methods() {}

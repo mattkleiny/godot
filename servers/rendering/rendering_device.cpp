@@ -5958,10 +5958,14 @@ Error RenderingDevice::initialize(RenderingContextDriver *p_context, DisplayServ
 	if (is_main_instance) {
 		// Only the singleton instance with a display should print this information.
 		String rendering_method;
-		if (OS::get_singleton()->get_current_rendering_method() == "mobile") {
+		String rendering_method_name = OS::get_singleton()->get_current_rendering_method();
+
+		if (rendering_method_name == "mobile") {
 			rendering_method = "Forward Mobile";
-		} else {
+		} else if (rendering_method_name == "forward+") {
 			rendering_method = "Forward+";
+		} else if (rendering_method_name == "pipeline") {
+			rendering_method = "Custom Pipeline";
 		}
 
 		// Output our device version.

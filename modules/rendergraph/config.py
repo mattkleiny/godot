@@ -10,7 +10,6 @@ def get_doc_classes():
     return [
       "RenderGraph",
       "RenderGraphNode",
-      "RenderPipeline"
     ]
 
 

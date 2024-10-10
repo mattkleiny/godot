@@ -4980,6 +4980,8 @@ String EditorNode::_get_system_info() const {
 		rendering_method = "Mobile";
 	} else if (rendering_method == "gl_compatibility") {
 		rendering_method = "Compatibility";
+	} else if (rendering_method == "pipeline") {
+		rendering_method = "Pipeline";
 	}
 	if (driver_name == "vulkan") {
 		driver_name = "Vulkan";
@@ -6494,6 +6496,8 @@ void EditorNode::_update_renderer_color() {
 		renderer->add_theme_color_override(SceneStringName(font_color), theme->get_color(SNAME("mobile_color"), EditorStringName(Editor)));
 	} else if (rendering_method == "gl_compatibility") {
 		renderer->add_theme_color_override(SceneStringName(font_color), theme->get_color(SNAME("gl_compatibility_color"), EditorStringName(Editor)));
+	} else if (rendering_method == "render_graph") {
+		renderer->add_theme_color_override(SceneStringName(font_color), theme->get_color(SNAME("forward_plus_color"), EditorStringName(Editor)));
 	}
 }
 
@@ -6525,6 +6529,9 @@ void EditorNode::_add_renderer_entry(const String &p_renderer_name, bool p_mark_
 	}
 	if (p_renderer_name == "gl_compatibility") {
 		item_text = TTR("Compatibility");
+	}
+	if (p_renderer_name == "pipeline") {
+		item_text = TTR("Custom Pipeline");
 	}
 	if (p_mark_overridden) {
 		item_text += " " + TTR("(Overridden)");

@@ -32,24 +32,13 @@
 
 #include "core/object/class_db.h"
 
-#include "command_queue.h"
 #include "render_graph.h"
-#include "render_pipeline.h"
 
 void initialize_rendergraph_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
-		// shared
-		GDREGISTER_CLASS(CommandQueue);
-
-		// pipeline
-		GDREGISTER_CLASS(RenderPipeline);
-		GDREGISTER_CLASS(RenderPass);
-
 		// graph
 		GDREGISTER_CLASS(RenderGraph);
 		GDREGISTER_CLASS(RenderGraphNode);
-		GDREGISTER_CLASS(RenderPass);
-		GDREGISTER_CLASS(RenderPassNode);
 	}
 }
 

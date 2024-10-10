@@ -31,6 +31,7 @@
 #ifndef RENDERING_METHOD_H
 #define RENDERING_METHOD_H
 
+#include "core/templates/hash_map.h"
 #include "servers/rendering/storage/render_scene_buffers.h"
 #include "servers/rendering_server.h"
 
@@ -370,6 +371,19 @@ public:
 
 	RenderingMethod();
 	virtual ~RenderingMethod();
+};
+
+class RenderingMethodFactory {
+private:
+	static RenderingMethodFactory *singleton;
+
+	HashMap<StringName, RenderingMethod *> rendering_methods;
+
+public:
+	static RenderingMethodFactory *get_singleton();
+
+	void add_rendering_method(StringName p_name);
+	void remove_rendering_method(StringName p_name);
 };
 
 #endif // RENDERING_METHOD_H

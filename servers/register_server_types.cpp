@@ -64,6 +64,7 @@
 #include "movie_writer/movie_writer_pngwav.h"
 #include "rendering/renderer_compositor.h"
 #include "rendering/renderer_rd/framebuffer_cache_rd.h"
+#include "rendering/renderer_rd/pipeline/render_pipeline.h"
 #include "rendering/renderer_rd/storage_rd/render_data_rd.h"
 #include "rendering/renderer_rd/storage_rd/render_scene_buffers_rd.h"
 #include "rendering/renderer_rd/storage_rd/render_scene_data_rd.h"
@@ -153,8 +154,6 @@ void register_server_types() {
 
 	GDREGISTER_CLASS(CameraServer);
 
-	GDREGISTER_ABSTRACT_CLASS(RenderingDevice);
-
 	GDREGISTER_CLASS(AudioStream);
 	GDREGISTER_CLASS(AudioStreamPlayback);
 	GDREGISTER_VIRTUAL_CLASS(AudioStreamPlaybackResampled);
@@ -210,6 +209,7 @@ void register_server_types() {
 	}
 
 	GDREGISTER_ABSTRACT_CLASS(RenderingDevice);
+	GDREGISTER_ABSTRACT_CLASS(RenderPipeline);
 	GDREGISTER_CLASS(RDTextureFormat);
 	GDREGISTER_CLASS(RDTextureView);
 	GDREGISTER_CLASS(RDAttachmentFormat);
