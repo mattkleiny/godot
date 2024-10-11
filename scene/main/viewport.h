@@ -51,6 +51,7 @@ class SceneTreeTimer;
 class Viewport;
 class Window;
 class World2D;
+class RenderPipeline;
 
 class ViewportTexture : public Texture2D {
 	GDCLASS(ViewportTexture, Texture2D);
@@ -223,6 +224,8 @@ public:
 
 private:
 	friend class ViewportTexture;
+
+	Ref<RenderPipeline> pipeline;
 
 	Viewport *parent = nullptr;
 	Viewport *gui_parent = nullptr; // Whose gui.tooltip_popup it is.
@@ -488,6 +491,9 @@ protected:
 	void _validate_property(PropertyInfo &p_property) const;
 
 public:
+	Ref<RenderPipeline> get_pipeline() const;
+	void set_pipeline(const Ref<RenderPipeline> &p_pipeline);
+
 	void canvas_parent_mark_dirty(Node *p_node);
 	void canvas_item_top_level_changed();
 

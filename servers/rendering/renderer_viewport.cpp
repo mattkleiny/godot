@@ -280,6 +280,26 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 		DisplayServer::get_singleton()->gl_window_make_current(p_viewport->viewport_to_screen);
 	}
 
+	
+	// if there is a pipeline provided on the viewport, delegate to it
+	Ref<RenderPipeline> pipeline = p_viewport->get_pipeline();
+	
+	if (pipeline.is_valid()) {
+		_draw_viewport_pipeline(p_viewport, pipeline);
+		// TODO: if there is NO viewport specified, use the project settings
+	} else {
+		// otherwise, use default behaviour
+		_draw_viewport_default(p_viewport);
+	}
+
+	if (p_viewport->measure_render_time) {
+		String rt_id = "vp_end_" + itos(p_viewport->self.get_id());
+		RSG::utilities->capture_timestamp(rt_id);
+		timestamp_vp_map[rt_id] = p_viewport->self;
+	}
+}
+
+void RendererViewport::_draw_viewport_default(Viewport* p_viewport) {
 	/* Camera should always be BEFORE any other 3D */
 
 	bool can_draw_2d = !p_viewport->disable_2d && p_viewport->view_count == 1; // Stereo rendering does not support 2D, no depth data
@@ -670,12 +690,11 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 		WARN_PRINT_ONCE("2D MSAA is enabled while there is no 2D content. Disable 2D MSAA for better performance.");
 		RSG::texture_storage->render_target_do_msaa_resolve(p_viewport->render_target);
 	}
+}
 
-	if (p_viewport->measure_render_time) {
-		String rt_id = "vp_end_" + itos(p_viewport->self.get_id());
-		RSG::utilities->capture_timestamp(rt_id);
-		timestamp_vp_map[rt_id] = p_viewport->self;
-	}
+
+void RendererViewport::_draw_viewport_pipeline(Viewport* p_viewport, RenderPipeline* p_pipeline) {
+	p_pipeline->render_viewport(p_viewport);
 }
 
 void RendererViewport::draw_viewports(bool p_swap_buffers) {

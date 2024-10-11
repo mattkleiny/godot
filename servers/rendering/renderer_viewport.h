@@ -43,6 +43,8 @@
 #include "servers/xr/xr_interface.h"
 #endif // _3D_DISABLED
 
+class RenderPipeline;
+
 class RendererViewport {
 public:
 	struct CanvasBase {
@@ -211,6 +213,8 @@ private:
 	void _configure_3d_render_buffers(Viewport *p_viewport);
 	void _draw_3d(Viewport *p_viewport);
 	void _draw_viewport(Viewport *p_viewport);
+	void _draw_viewport_default(Viewport* p_viewport);
+	void _draw_viewport_pipeline(Viewport* p_viewport, RenderPipeline* p_pipelien);
 
 	int occlusion_rays_per_thread = 512;
 

@@ -34,6 +34,7 @@
 #include "core/io/resource.h"
 
 class RenderingDevice;
+class Viewport;
 
 // A queue capable of storing rendering commands.
 class RenderCommandQueue : public Object {
@@ -125,9 +126,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	virtual void begin_frame(RenderCommandQueue& p_queue);
-	virtual void render_viewport(RID p_viewport, RenderCommandQueue& p_queue);
-	virtual void end_frame(RenderCommandQueue& p_queue);
+	virtual void render_viewport(const Viewport& p_viewport) override;
 };
 
 // A render pass in a multi-pass rendering pipeline.
@@ -164,21 +163,7 @@ public:
 	void add_pass(const Ref<RenderPass> &p_pass);
 	void remove_pass(int p_index);
 
-	virtual void begin_frame(RenderCommandQueue& p_queue) override;
-	virtual void render_viewport(RID p_viewport, RenderCommandQueue& p_queue) override;
-	virtual void end_frame(RenderCommandQueue& p_queue) override;
-};
-
-// A rendering method that employs a rendering pipeline.
-class RenderPipelineMethod : public RenderingMethod {
-	Ref<RenderPipeline> pipeline;
-	HashMap<RID, Ref<RenderingQueue>> queues;
-
-public:
-	void set_pipeline(const Ref<RenderPipeline> &p_pipeline);
-	Ref<RenderPipeline> get_pipeline() const;
-
-	virtual void render_viewport(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) override;
+	virtual void render_viewport(Viewport* p_viewport) override;
 };
 
 #endif // RENDERING_PIPELINE_H

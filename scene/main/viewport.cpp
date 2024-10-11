@@ -4544,6 +4544,9 @@ void Viewport::_propagate_world_2d_changed(Node *p_node) {
 }
 
 void Viewport::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_pipeline", "pipeline"), &Viewport::set_pipeline);
+	ClassDB::bind_method(D_METHOD("get_pipeline"), &Viewport::get_pipeline);
+	
 	ClassDB::bind_method(D_METHOD("set_world_2d", "world_2d"), &Viewport::set_world_2d);
 	ClassDB::bind_method(D_METHOD("get_world_2d"), &Viewport::get_world_2d);
 	ClassDB::bind_method(D_METHOD("find_world_2d"), &Viewport::find_world_2d);
