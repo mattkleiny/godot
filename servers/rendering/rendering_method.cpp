@@ -35,17 +35,3 @@ RenderingMethod::RenderingMethod() {
 
 RenderingMethod::~RenderingMethod() {
 }
-
-void RenderingMethodFactory::add_rendering_method(StringName p_name) {
-}
-
-void RenderingMethodFactory::remove_rendering_method(StringName p_name) {
-}
-
-RenderingMethodFactory *RenderingMethodFactory::get_singleton() {
-	static RenderingMethodFactory *singleton = nullptr;
-	if (!singleton) {
-		singleton = memnew(RenderingMethodFactory);
-	}
-	return singleton;
-}

@@ -373,17 +373,4 @@ public:
 	virtual ~RenderingMethod();
 };
 
-class RenderingMethodFactory {
-private:
-	static RenderingMethodFactory *singleton;
-
-	HashMap<StringName, RenderingMethod *> rendering_methods;
-
-public:
-	static RenderingMethodFactory *get_singleton();
-
-	void add_rendering_method(StringName p_name);
-	void remove_rendering_method(StringName p_name);
-};
-
 #endif // RENDERING_METHOD_H
