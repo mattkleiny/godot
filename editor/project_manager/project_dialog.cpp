@@ -467,11 +467,6 @@ void ProjectDialog::_renderer_selected() {
 				String::utf8("\n•  ") + TTR("Intended for low-end/older devices.") +
 				String::utf8("\n•  ") + TTR("Uses OpenGL 3 backend (OpenGL 3.3/ES 3.0/WebGL2).") +
 				String::utf8("\n•  ") + TTR("Fastest rendering of simple scenes."));
-	} else if (renderer_type == "pipeline") {
-		renderer_info->set_text(
-				String::utf8("•  ") + TTR("Supports custom rendering workloads with a pipeline pattern.") +
-				String::utf8("\n•  ") + TTR("Uses the RenderingDevice backend.") +
-				String::utf8("\n•  ") + TTR("Complexity scales with the complexity of your custom render pipeline"));
 	} else {
 		WARN_PRINT("Unknown renderer type. Please report this as a bug on GitHub.");
 	}
@@ -954,17 +949,6 @@ ProjectDialog::ProjectDialog() {
 	if (default_renderer_type == "forward_plus") {
 		rs_button->set_pressed(true);
 	}
-	rs_button = memnew(CheckBox);
-	rs_button->set_button_group(renderer_button_group);
-	rs_button->set_text(TTR("Render Pipeline"));
-	rs_button->set_meta(SNAME("rendering_method"), "pipeline");
-	rvb->add_child(rs_button);
-	if (default_renderer_type == "pipeline") {
-		rs_button->set_pressed(true);
-	}
-#ifndef RD_ENABLED
-	rs_button->set_disabled(true);
-#endif
 	rs_button = memnew(CheckBox);
 	rs_button->set_button_group(renderer_button_group);
 	rs_button->set_text(TTR("Mobile"));

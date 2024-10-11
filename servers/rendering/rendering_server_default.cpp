@@ -213,7 +213,8 @@ void RenderingServerDefault::_init() {
 	RSG::canvas = memnew(RendererCanvasCull);
 	RSG::viewport = memnew(RendererViewport);
 	RSG::camera_attributes = memnew(RendererCameraAttributes);
-	RSG::scene = memnew(RendererSceneCull);
+	RendererSceneCull *sr = memnew(RendererSceneCull);
+	RSG::scene = sr;
 	RSG::rasterizer = RendererCompositor::create();
 	RSG::utilities = RSG::rasterizer->get_utilities();
 	RSG::rasterizer->initialize();

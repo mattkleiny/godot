@@ -5962,10 +5962,8 @@ Error RenderingDevice::initialize(RenderingContextDriver *p_context, DisplayServ
 
 		if (rendering_method_name == "mobile") {
 			rendering_method = "Forward Mobile";
-		} else if (rendering_method_name == "forward+") {
+		} else {
 			rendering_method = "Forward+";
-		} else if (rendering_method_name == "pipeline") {
-			rendering_method = "Custom Pipeline";
 		}
 
 		// Output our device version.

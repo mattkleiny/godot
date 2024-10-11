@@ -36,7 +36,6 @@
 
 void initialize_rendergraph_module(ModuleInitializationLevel p_level) {
 	if (p_level == MODULE_INITIALIZATION_LEVEL_SERVERS) {
-		// graph
 		GDREGISTER_CLASS(RenderGraph);
 		GDREGISTER_CLASS(RenderGraphNode);
 	}

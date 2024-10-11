@@ -31,7 +31,6 @@
 #ifndef RENDERING_METHOD_H
 #define RENDERING_METHOD_H
 
-#include "core/templates/hash_map.h"
 #include "servers/rendering/storage/render_scene_buffers.h"
 #include "servers/rendering_server.h"
 
