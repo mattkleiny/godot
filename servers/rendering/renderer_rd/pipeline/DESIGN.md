@@ -1,4 +1,4 @@
-# Add Rendering Pipeline Abstraction
+# Rendering Pipelines
 
 ## Description
 
@@ -14,9 +14,8 @@ This concept is similar to the `ScriptableRenderPipeline` from Unity, in that it
 
 This is primary achieved with two new ideas:
 
-* The `RenderingPipeline` resource, which is a user-definable object (with properties) that can live in the project, or on a particular `SubViewport`.
-* The `RenderingCommandQueue` object, which abstracts over the normal rendering operations performed by the `RenderingServer`.
-  * This object provides a simplified interface to the rendering server operations.
+* A `RenderPipeline` resource, which is a user-definable object (with properties) that can live in the project, or on a particular `SubViewport`.
+* A `RenderCommandQueue` object, which abstracts over the normal rendering operations performed by the `RenderingServer`.
 
 Furthermore, the existing rendering backends are refactored to honor this new model.
 
@@ -26,14 +25,18 @@ Two new mechanisms
 
 ## Changes
 
-- Added `RenderingPipeline` resource to define the contract for rendering pipelines.
-- Refactored existing rendering code to use the new `RenderingPipeline` interface
+- Added `RenderCommandQueue` object which presents a simplified interface to the rendering server operations.
+- Added `RenderPipeline` resource to define the contract for rendering pipelines.
+- Added `MultiPassRenderPipeline` which adds support for multiple render passes via the `RenderPass` resource.
+- Added `RenderPipelineMethod` which is the intersection point between the `RenderPipeline` and the `RenderingServer`.
+
+- Refactored existing rendering code to use the new `RenderPipeline` interface
   - This is achieved by wrapping over the `RendererViewport` via the `RenderingServerDefault::_draw` method.
 
 ## Testing
 
-- Verified that a simple 2d and 3d application renders correctly using a non-defined `RenderingPipeline` (which delegates to the existing rendering subsystem)
-- Verified that a simple 2d and 3d application renders correctly when using a minimaly-defined `RenderingPipeline` that instructs.
+- Verified that a simple 2d and 3d application renders correctly using a non-defined `RenderPipeline` (which delegates to the existing rendering subsystem)
+- Verified that a simple 2d and 3d application renders correctly when using a minimaly-defined `RenderPipeline` that instructs.
 
 ## Related Issues
 
@@ -46,6 +49,14 @@ Two new mechanisms
 - [ ] Documentation has been updated to reflect the changes.
 - [ ] All new and existing tests pass.
 - [ ] An example project is published and provided.
+
+## Remaining Work
+
+- [ ] Extract `RenderViewport` into pieces via the `RenderPipeline` interface.
+- [ ] Delegate to the `RenderPipeline` from the `RendererViewport` for all rendering operations.
+- [ ] Get a basic example project up and running.
+- [ ] Allow specifying a `RenderPipeline` on a per-project basis.
+- [ ] Allow specifying a `RenderPipeline` on a per-viewport basis.
 
 ## Sneak Peak
 

@@ -33,11 +33,11 @@
 
 #include "core/io/resource.h"
 
-class RenderingDeviceRD;
+class RenderingDevice;
 
 // A queue capable of storing rendering commands.
-class RenderingCommandQueue : public Object {
-	GDCLASS(RenderingCommandQueue, Object);
+class RenderCommandQueue : public Object {
+	GDCLASS(RenderCommandQueue, Object);
 
 	enum CullingFlags {
 		CULLING_FLAGS_NONE = 0,
@@ -52,8 +52,6 @@ class RenderingCommandQueue : public Object {
 		CullingFlags flags;
 		Plane[6] frustum;
 		bool has_frustum;
-
-		static CullingSettings DEFAULT = { CULLING_FLAGS_NONE, {}, false };
 	};
 
 	struct RenderSettings {
@@ -69,6 +67,8 @@ class RenderingCommandQueue : public Object {
 			COMMAND_DRAW_MULTIMESH,
 			COMMAND_DRAW_SPRITE,
 			COMMAND_DRAW_PARTICLES,
+			COMMAND_DRAW_CANVAS_ITEMS,
+			COMMAND_DRAW_SPATIAL_ITEMS,
 		} 
 		type;
 
@@ -80,7 +80,7 @@ class RenderingCommandQueue : public Object {
 		}
 	};
 
-	RenderingDeviceRD* device;
+	RenderingDevice* device;
 	List<Command> commands;
 
 protected:
@@ -88,54 +88,97 @@ protected:
 
 public:
 	// standard rendering commands
+	void set_render_target(const RID p_render_target);
+	void set_default_render_target();
+
 	void clear_color_buffer(const Color &p_color);
 	void clear_depth_buffer(float p_depth);
 	void clear_stencil_buffer(uint32_t p_stencil);
-	
-	void draw_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p_override_material);
-	void draw_multimesh(const Ref<MultiMesh> &p_multimesh, const Ref<Material> &p_override_material);
-	
-	void set_render_target(const Ref<RenderTarget> &p_render_target);
-	void set_default_render_target();
 
+	void draw_canvas_item(const RID p_canvas_item, const RID p_override_material);	
+	void draw_instance(const RID p_instance, const RID &p_override_material);
+	void draw_mesh(const RID p_mesh, const Ref<Material> &p_override_material);
+	void draw_multimesh(const RID p_multimesh, const Ref<Material> &p_override_material);
+	void draw_fullscreen_quad(const RID p_material);
+	
 	// delegation operations, with customizations for overrides
 	void draw_canvas_items(CullingFlags p_flags = CULLING_EVERYTHING, const Ref<Material> &p_override_material);
 	void draw_canvas_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
 	void draw_spatial_items(CullingFlags p_flags = CULLING_EVERYTHING, const Ref<Material> &p_override_material);
 	void draw_spatial_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
-	void draw_fullscreen_quad(const Ref<Material> &p_material);
 
 	// general operations
 	void reset();
 	void flush();
 
-	RenderingQueue(RenderingDeviceRD* p_device);
+	RenderingQueue(RenderingDevice* p_device);
 }
-
 
 // A configurable rendering pipeline.
 //
 // This pipeline is used to define the stages of the renderer using Script or GDExtension.
-// The pipeline only works with the RenderingDeviceRD architecture via the RenderingQueue interface.
-class RenderingPipeline : public Resource {
-	GDCLASS(RenderingPipeline, Resource);
+// The pipeline only works with the RenderingDevice architecture via the RenderingQueue interface.
+class RenderPipeline : public Resource {
+	GDCLASS(RenderPipeline, Resource);
 
 protected:
 	static void _bind_methods();
 
 public:
-	virtual void render_viewport(RID p_viewport, RenderingCommandQueue& p_queue);
+	virtual void begin_frame(RenderCommandQueue& p_queue);
+	virtual void render_viewport(RID p_viewport, RenderCommandQueue& p_queue);
+	virtual void end_frame(RenderCommandQueue& p_queue);
+};
+
+// A render pass in a multi-pass rendering pipeline.
+class RenderPass : public Resource {
+	GDCLASS(RenderPass, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	virtual bool is_enabled() const { return true; }
+	
+	virtual void begin_frame(RenderCommandQueue& p_queue) {}
+	virtual void begin_viewport(RID p_viewport, RenderCommandQueue& p_queue) {}
+	virtual void render_viewport(RID p_viewport, RenderCommandQueue& p_queue) {}
+	virtual void end_viewport(RID p_viewport, RenderCommandQueue& p_queue) {}
+	virtual void end_frame(RIRenderCommandQueue& p_queue) {}
+};
+
+// A rendering pipeline with support for multiple passes per viewport.
+//
+// This is useful for rendering techniques that require multiple passes, such as deferred rendering.
+class MultiPassRenderPipeline : public RenderPipeline {
+	GDCLASS(MultiPassRenderPipeline, RenderPipeline);
+
+	List<Ref<RenderPass>> passes;
+
+protected:
+	static void _bind_methods();
+
+public:
+	int get_pass_count() const;
+	Ref<RenderPass> get_pass(int p_index);
+	void add_pass(const Ref<RenderPass> &p_pass);
+	void remove_pass(int p_index);
+
+	virtual void begin_frame(RenderCommandQueue& p_queue) override;
+	virtual void render_viewport(RID p_viewport, RenderCommandQueue& p_queue) override;
+	virtual void end_frame(RenderCommandQueue& p_queue) override;
 };
 
 // A rendering method that employs a rendering pipeline.
-class RenderingPipelineMethod : public RenderingMethod {
-	Ref<RenderingPipeline> pipeline;
+class RenderPipelineMethod : public RenderingMethod {
+	Ref<RenderPipeline> pipeline;
 	HashMap<RID, Ref<RenderingQueue>> queues;
 
 public:
-	virtual void render_viewport(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) override;
+	void set_pipeline(const Ref<RenderPipeline> &p_pipeline);
+	Ref<RenderPipeline> get_pipeline() const;
 
-	RenderingPipelineMethod(Ref<RenderingPipeline>& p_pipeline);
+	virtual void render_viewport(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) override;
 };
 
 #endif // RENDERING_PIPELINE_H
