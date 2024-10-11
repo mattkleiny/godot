@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RenderGraph" inherits="Resource" experimental="More customization of the rendering pipeline will be added in the future." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Allows visually designing a rendering pipeline.
+	</brief_description>
+	<description>
+		The RenderGraph resource allows you to visually design a rendering pipeline.
+		It is a collection of nodes that represent rendering operations, such as rendering a mesh, rendering a shadow map, or post-processing effects.	
+		The nodes are connected by edges, which represent the flow of data between the nodes.
+		The nodes can be connected in any way, allowing you to create complex rendering pipelines.
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+	</members>
+</class>
