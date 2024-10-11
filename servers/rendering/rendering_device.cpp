@@ -5958,9 +5958,7 @@ Error RenderingDevice::initialize(RenderingContextDriver *p_context, DisplayServ
 	if (is_main_instance) {
 		// Only the singleton instance with a display should print this information.
 		String rendering_method;
-		String rendering_method_name = OS::get_singleton()->get_current_rendering_method();
-
-		if (rendering_method_name == "mobile") {
+		if (OS::get_singleton()->get_current_rendering_method() == "mobile") {
 			rendering_method = "Forward Mobile";
 		} else {
 			rendering_method = "Forward+";
