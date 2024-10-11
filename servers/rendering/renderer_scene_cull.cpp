@@ -3183,6 +3183,8 @@ void RendererSceneCull::_scene_cull(CullData &cull_data, InstanceCullResult &cul
 }
 
 void RendererSceneCull::_render_scene(const RendererSceneRender::CameraData *p_camera_data, const Ref<RenderSceneBuffers> &p_render_buffers, RID p_environment, RID p_force_camera_attributes, RID p_compositor, uint32_t p_visible_layers, RID p_scenario, RID p_viewport, RID p_shadow_atlas, RID p_reflection_probe, int p_reflection_probe_pass, float p_screen_mesh_lod_threshold, bool p_using_shadows, RenderingMethod::RenderInfo *r_render_info) {
+	// TODO: break this up so steps can occur independently
+
 	Instance *render_reflection_probe = instance_owner.get_or_null(p_reflection_probe); //if null, not rendering to it
 
 	// Prepare the light - camera volume culling system.

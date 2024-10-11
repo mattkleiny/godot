@@ -238,6 +238,7 @@ void RendererViewport::_configure_3d_render_buffers(Viewport *p_viewport) {
 }
 
 void RendererViewport::_draw_3d(Viewport *p_viewport) {
+	// TODO: move this to RenderCommandQueue
 #ifndef _3D_DISABLED
 	RENDER_TIMESTAMP("> Render 3D Scene");
 
@@ -300,6 +301,8 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 }
 
 void RendererViewport::_draw_viewport_default(Viewport* p_viewport) {
+	// TODO: move this to RenderCommandQueue
+
 	/* Camera should always be BEFORE any other 3D */
 
 	bool can_draw_2d = !p_viewport->disable_2d && p_viewport->view_count == 1; // Stereo rendering does not support 2D, no depth data
