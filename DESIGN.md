@@ -28,6 +28,7 @@ Two new mechanisms
 - Added `RenderCommandQueue` object which presents a simplified interface to the rendering server operations.
 - Added `RenderPipeline` resource to define the contract for rendering pipelines.
 - Added `MultiPassRenderPipeline` which adds support for multiple render passes via the `RenderPass` resource.
+- Added `RenderGraph` resource to allow construction of `RenderPipeline`s via a visual editor.
 
 - Refactored existing rendering code to use the new `RenderPipeline` interface
   - This is achieved by wrapping over the `RendererViewport` via the `RenderingServerDefault::_draw` method.
