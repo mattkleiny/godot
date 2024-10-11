@@ -1,5 +1,5 @@
 /**************************************************************************/
-/*  rendering_pipeline.cpp                                                */
+/*  renderer_pipeline.cpp                                                 */
 /**************************************************************************/
 /*                         This file is part of:                          */
 /*                             GODOT ENGINE                               */
@@ -29,8 +29,6 @@
 /**************************************************************************/
 
 #include "rendering_pipeline.h"
-
-#include "servers/rendering/rendering_device.h"
 
 // RenderCommandQueue
 
