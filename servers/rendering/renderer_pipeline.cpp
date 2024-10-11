@@ -30,56 +30,24 @@
 
 #include "rendering_pipeline.h"
 
-// RenderCommandQueue
+// RenderContext
 
-void RenderCommandQueue::clear_color_buffer(const Color &p_color) {
-  Command command;
-
-  command.type = COMMAND_CLEAR_COLOR_BUFFER;
-  command.clear_color_op.color = p_color;
-
-  commands.push_back(command);
+void RenderContext::clear_color_buffer(const Color &p_color) {
 }
 
-void RenderCommandQueue::clear_depth_buffer(float p_depth) {
-  Command command;
-
-  command.type = Command::COMMAND_CLEAR_DEPTH_BUFFER;
-  command.clear_depth_op.depth = p_depth;
-
-  commands.push_back(command);
+void RenderContext::clear_depth_buffer(float p_depth) {
 }
 
-void RenderCommandQueue::clear_stencil_buffer(uint32_t p_stencil) {
-  Command command;
-
-  command.type = Command::COMMAND_CLEAR_STENCIL_BUFFER;
-  command.clear_stencil_op.stencil = p_stencil;
-
-  commands.push_back(command);
+void RenderContext::clear_stencil_buffer(uint32_t p_stencil) {
 }
 
-void RenderCommandQueue::draw_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p_override_material) {
-  Command command;
-
-  command.type = Command::COMMAND_DRAW_MESH;
-  command.draw_mesh.instance = p_mesh;
-  command.draw_mesh.override_material = p_override_material;
-
-  commands.push_back(command);
+void RenderContext::draw_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p_override_material) {
 }
 
-void RenderCommandQueue::draw_multimesh(const Ref<MultiMesh> &p_multimesh, const Ref<Material> &p_override_material) {
-  Command command;
-
-  command.type = Command::COMMAND_DRAW_MULTIMESH;
-  command.draw_op.instance = p_multimesh;
-  command.draw_op.override_material = p_override_material;
-
-  commands.push_back(command);
+void RenderContext::draw_multimesh(const Ref<MultiMesh> &p_multimesh, const Ref<Material> &p_override_material) {
 }
 
-void RenderCommandQueue::draw_canvas_items(RenderCommandQueue::CullingFlags p_flags, const Ref<Material> &p_override_material) {
+void RenderContext::draw_canvas_items(RenderContext::CullingFlags p_flags, const Ref<Material> &p_override_material) {
   CullingSettings culling_settings;
 
   culling_settings.flags = p_flags;
@@ -92,11 +60,11 @@ void RenderCommandQueue::draw_canvas_items(RenderCommandQueue::CullingFlags p_fl
   draw_canvas_items_ex(culling_settings, render_settings);
 }
 
-void RenderCommandQueue::draw_canvas_items_ex(RenderCommandQueue::CullingSettings p_culling_settings, RenderCommandQueue::RenderSettings p_render_settings) {
+void RenderContext::draw_canvas_items_ex(RenderContext::CullingSettings p_culling_settings, RenderContext::RenderSettings p_render_settings) {
   // TODO: implement me
 }
 
-void RenderCommandQueue::draw_spatial_items(RenderCommandQueue::CullingFlags p_flags, const Ref<Material> &p_override_material) {
+void RenderContext::draw_spatial_items(RenderContext::CullingFlags p_flags, const Ref<Material> &p_override_material) {
   CullingSettings culling_settings;
 
   culling_settings.flags = p_flags;
@@ -109,75 +77,47 @@ void RenderCommandQueue::draw_spatial_items(RenderCommandQueue::CullingFlags p_f
   draw_spatial_items_ex(culling_settings, render_settings);
 }
 
-void RenderCommandQueue::draw_spatial_items_ex(RenderCommandQueue::CullingSettings p_culling_settings, RenderCommandQueue::RenderSettings p_render_settings) {
+void RenderContext::draw_spatial_items_ex(RenderContext::CullingSettings p_culling_settings, RenderContext::RenderSettings p_render_settings) {
   // TODO: implement me
 }
 
-void RenderCommandQueue::draw_fullscreen_quad(const Ref<Material> &p_material) {
+void RenderContext::draw_fullscreen_quad(const Ref<Material> &p_material) {
   // TODO: implement me
 }
 
-void RenderCommandQueue::set_render_target(const Ref<RenderTarget> &p_render_target) {
+void RenderContext::set_render_target(const Ref<RenderTarget> &p_render_target) {
   // TODO: implement me
 }
 
-void RenderCommandQueue::set_default_render_target() {
+void RenderContext::set_default_render_target() {
   // TODO: implement me
 }
 
-void RenderCommandQueue::reset() {
-  commands.clear();
+void RenderContext::_bind_methods() {
+  ClassDB::bind_method(D_METHOD("set_render_target", "render_target"), &RenderContext::set_render_target);
+  ClassDB::bind_method(D_METHOD("set_default_render_target"), &RenderContext::set_default_render_target);
+
+  ClassDB::bind_method(D_METHOD("clear_color_buffer", "color"), &RenderContext::clear_color_buffer);
+  ClassDB::bind_method(D_METHOD("clear_depth_buffer", "depth"), &RenderContext::clear_depth_buffer);
+  ClassDB::bind_method(D_METHOD("clear_stencil_buffer", "stencil"), &RenderContext::clear_stencil_buffer);
+
+  ClassDB::bind_method(D_METHOD("draw_canvas_item", "canvas_item", "override_material"), &RenderContext::draw_canvas_item);
+  ClassDB::bind_method(D_METHOD("draw_instance", "instance", "override_material"), &RenderContext::draw_instance);
+  ClassDB::bind_method(D_METHOD("draw_mesh", "mesh", "override_material"), &RenderContext::draw_mesh);
+  ClassDB::bind_method(D_METHOD("draw_multimesh", "multimesh", "override_material"), &RenderContext::draw_multimesh);
+  ClassDB::bind_method(D_METHOD("draw_fullscreen_quad", "material"), &RenderContext::draw_fullscreen_quad);
+
+  ClassDB::bind_method(D_METHOD("draw_canvas_items", "flags", "override_material"), &RenderContext::draw_canvas_items);
+  ClassDB::bind_method(D_METHOD("draw_spatial_items", "flags", "override_material"), &RenderContext::draw_spatial_items);
 }
 
-void RenderCommandQueue::flush() {
-  for (int i = 0; i < commands.size(); i++) {
-    Command &command = commands[i];
-
-    switch (command.type) {
-      case Command::COMMAND_CLEAR_COLOR_BUFFER:
-        break;
-      case Command::COMMAND_CLEAR_DEPTH_BUFFER:
-        break;
-      case Command::COMMAND_CLEAR_STENCIL_BUFFER:
-        break;
-      case Command::COMMAND_DRAW_MESH:
-        break;
-      case Command::COMMAND_DRAW_MULTIMESH:
-        break;
-    }
-  }
-
-  reset();
-}
-
-void RenderCommandQueue::_bind_methods() {
-  ClassDB::bind_method(D_METHOD("set_render_target", "render_target"), &RenderCommandQueue::set_render_target);
-  ClassDB::bind_method(D_METHOD("set_default_render_target"), &RenderCommandQueue::set_default_render_target);
-
-  ClassDB::bind_method(D_METHOD("clear_color_buffer", "color"), &RenderCommandQueue::clear_color_buffer);
-  ClassDB::bind_method(D_METHOD("clear_depth_buffer", "depth"), &RenderCommandQueue::clear_depth_buffer);
-  ClassDB::bind_method(D_METHOD("clear_stencil_buffer", "stencil"), &RenderCommandQueue::clear_stencil_buffer);
-
-  ClassDB::bind_method(D_METHOD("draw_canvas_item", "canvas_item", "override_material"), &RenderCommandQueue::draw_canvas_item);
-  ClassDB::bind_method(D_METHOD("draw_instance", "instance", "override_material"), &RenderCommandQueue::draw_instance);
-  ClassDB::bind_method(D_METHOD("draw_mesh", "mesh", "override_material"), &RenderCommandQueue::draw_mesh);
-  ClassDB::bind_method(D_METHOD("draw_multimesh", "multimesh", "override_material"), &RenderCommandQueue::draw_multimesh);
-  ClassDB::bind_method(D_METHOD("draw_fullscreen_quad", "material"), &RenderCommandQueue::draw_fullscreen_quad);
-
-  ClassDB::bind_method(D_METHOD("draw_canvas_items", "flags", "override_material"), &RenderCommandQueue::draw_canvas_items);
-  ClassDB::bind_method(D_METHOD("draw_spatial_items", "flags", "override_material"), &RenderCommandQueue::draw_spatial_items);
-
-  ClassDB::bind_method(D_METHOD("flush"), &RenderCommandQueue::flush);
-  ClassDB::bind_method(D_METHOD("reset"), &RenderCommandQueue::reset);
-}
-
-RenderCommandQueue::RenderCommandQueue(RenderingDevice* p_device) {
+RenderContext::RenderContext(RenderingDevice* p_device) {
   device = p_device;
 }
 
 // RenderPipeline
 
-void RenderPipeline::render_viewport(RID p_viewport, RenderCommandQueue& p_queue) {
+void RenderPipeline::render_viewport(RID p_viewport, RenderContext& p_context) {
   // TODO: invoke the script
 }
 
@@ -209,24 +149,14 @@ void MultiPassRenderPipeline::remove_pass(int p_index) {
   passes.remove(p_index);
 }
 
-void MultiPassRenderPipeline::begin_frame(RenderCommandQueue& p_queue) {
-  for (int i = 0; i < passes.size(); i++) {
-    RenderPass& pass = &passes[i];
-    
-    if (pass.is_valid() && pass->is_enabled()) {
-      pass->begin_frame(p_queue);
-    }
-  }
-}
-
-void MultiPassRenderPipeline::render_viewport(RID p_viewport, RenderCommandQueue& p_queue) {
+void MultiPassRenderPipeline::render_viewport(RID p_viewport, RenderContext& p_context) {
   ERR_FAIL_COND(p_viewport == RID());
 
   for (int i = 0; i < passes.size(); i++) {
     RenderPass& pass = &passes[i];
     
     if (pass.is_valid() && pass->is_enabled()) {
-      pass->begin_viewport(p_viewport, p_queue);
+      pass->begin_viewport(p_viewport, p_context);
     }
   }
 
@@ -234,7 +164,7 @@ void MultiPassRenderPipeline::render_viewport(RID p_viewport, RenderCommandQueue
     RenderPass& pass = &passes[i];
     
     if (pass.is_valid() && pass->is_enabled()) {
-      pass->render_viewport(p_viewport, p_queue);
+      pass->render_viewport(p_viewport, p_context);
     }
   }
 
@@ -242,43 +172,14 @@ void MultiPassRenderPipeline::render_viewport(RID p_viewport, RenderCommandQueue
     RenderPass& pass = &passes[i];
     
     if (pass.is_valid() && pass->is_enabled()) {
-      pass->end_viewport(p_viewport, p_queue);
+      pass->end_viewport(p_viewport, p_context);
     }
   }
 }
 
-void MultiPassRenderPipeline::end_frame(RenderCommandQueue& p_queue) {
-  for (int i = 0; i < passes.size(); i++) {
-    RenderPass& pass = &passes[i];
-    
-    if (pass.is_valid() && pass->is_enabled()) {
-      pass->end_frame(p_queue);
-    }
-  }
-}
-
-// RenderPipelineMethod
-
-void RenderPipelineMethod::set_pipeline(const Ref<RenderPipeline> &p_pipeline) {
-  pipeline = p_pipeline;
-}
-
-Ref<RenderPipeline> RenderPipelineMethod::get_pipeline() const {
-  return pipeline;
-}
-
-void RenderPipelineMethod::render_camera(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) {
-  // no pipeline, no rendering
-  if (!pipeline.is_valid()) {
-    return;
-  }
-
-  // create a queue per camera
-  if (!queues.has(p_camera)) {
-    queues[p_camera] = RenderingQueue(pipeline->device);
-  }
-  RenderingQueue &queue = queues[p_camera];
-  queue->clear();
-
-  // TODO: render the camera
+void MultiPassRenderPipeline::_bind_methods() {
+  ClassDB::bind_method(D_METHOD("get_pass_count"), &MultiPassRenderPipeline::get_pass_count);
+  ClassDB::bind_method(D_METHOD("get_pass", "index"), &MultiPassRenderPipeline::get_pass);
+  ClassDB::bind_method(D_METHOD("add_pass", "pass"), &MultiPassRenderPipeline::add_pass);
+  ClassDB::bind_method(D_METHOD("remove_pass", "index"), &MultiPassRenderPipeline::remove_pass);
 }

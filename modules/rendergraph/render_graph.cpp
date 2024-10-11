@@ -2,14 +2,17 @@
 
 // RenderGraphNode
 
-void RenderGraphNode::_bind_methods() {}
-
 void RenderGraphNode::render_viewport(const Viewport& p_viewport) {
 }
 
-// RenderGraph
+void RenderGraphNode::_bind_methods() {
+  ClassDB::bind_method(D_METHOD("set_root", "root"), &RenderGraphNode::set_root);
+  ClassDB::bind_method(D_METHOD("is_root"), &RenderGraphNode::is_root);
 
-void RenderGraph::_bind_methods() {}
+  ADD_PROPERTY(PropertyInfo(Variant::BOOL, "root"), "set_root", "is_root");
+}
+
+// RenderGraph
 
 int RenderGraph::get_node_count() const {
   return nodes.size();
@@ -51,11 +54,15 @@ void RenderGraph::render_viewport(const Viewport& p_viewport) {
   root_node->render_viewport(p_viewport);
 }
 
-// RenderGraphPipeline
-
-void RenderGraphPipeline::_bind_methods() {
-  ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graph", PROPERTY_HINT_RESOURCE_TYPE, "RenderGraph"), "set_graph", "get_graph");
+void RenderGraph::_bind_methods() {
+  ClassDB::bind_method(D_METHOD("get_node_count"), &RenderGraph::get_node_count);
+  ClassDB::bind_method(D_METHOD("add_node", "node"), &RenderGraph::add_node);
+  ClassDB::bind_method(D_METHOD("remove_node", "index"), &RenderGraph::remove_node);
+  ClassDB::bind_method(D_METHOD("get_node", "index"), &RenderGraph::get_node);
+  ClassDB::bind_method(D_METHOD("get_root_node"), &RenderGraph::get_root_node);
 }
+
+// RenderGraphPipeline
 
 void RenderGraphPipeline::set_graph(Ref<RenderGraph>& p_graph) {
   graph = p_graph;
@@ -71,4 +78,11 @@ void RenderGraphPipeline::render_viewport(const Viewport& p_viewport) {
   }
 
   graph->render_viewport(p_viewport);
+}
+
+void RenderGraphPipeline::_bind_methods() {
+  ClassDB::bind_method(D_METHOD("set_graph", "graph"), &RenderGraphPipeline::set_graph);
+  ClassDB::bind_method(D_METHOD("get_graph"), &RenderGraphPipeline::get_graph);
+
+  ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "graph", PROPERTY_HINT_RESOURCE_TYPE, "RenderGraph"), "set_graph", "get_graph");
 }

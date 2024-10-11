@@ -15,7 +15,7 @@ This concept is very similar to the `ScriptableRenderPipeline` idea that Unity u
 It's implemented with the following ideas:
 
 * A `RenderPipeline` resource, which is a user-definable object (with properties) that can live in the project, or on a particular `SubViewport`.
-* A `RenderCommandQueue` object, which abstracts over the normal rendering operations performed by the `RenderingServer`.
+* A `RenderContext` object, which abstracts over the normal rendering operations performed by the `RenderingServer`.
 
 Two new mechanisms
 * Delegation
@@ -23,7 +23,7 @@ Two new mechanisms
 
 ## Changes
 
-- Added `RenderCommandQueue` object which presents a simplified interface to the rendering server operations.
+- Added `RenderContext` object which presents a simplified interface to the rendering server operations.
 - Added `RenderPipeline` resource to define the contract for rendering pipelines.
 - Added `MultiPassRenderPipeline` which adds support for multiple render passes via the `RenderPass` resource.
 - Added `RenderGraph` resource to allow construction of `RenderPipeline`s via a visual editor.

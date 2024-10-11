@@ -36,9 +36,9 @@
 class RenderingDevice;
 class Viewport;
 
-// A queue capable of storing rendering commands.
-class RenderCommandQueue : public Object {
-	GDCLASS(RenderCommandQueue, Object);
+// A context for executing render operations.
+class RenderContext : public Object {
+	GDCLASS(RenderContext, Object);
 
 	enum CullingFlags {
 		CULLING_FLAGS_NONE = 0,
@@ -59,30 +59,7 @@ class RenderCommandQueue : public Object {
 		RID override_material;
 	}
 
-	struct Command {
-		enum {
-			COMMAND_CLEAR_COLOR_BUFFER,
-			COMMAND_CLEAR_DEPTH_BUFFER,
-			COMMAND_CLEAR_STENCIL_BUFFER,
-			COMMAND_DRAW_MESH,
-			COMMAND_DRAW_MULTIMESH,
-			COMMAND_DRAW_SPRITE,
-			COMMAND_DRAW_PARTICLES,
-			COMMAND_DRAW_CANVAS_ITEMS,
-			COMMAND_DRAW_SPATIAL_ITEMS,
-		} 
-		type;
-
-		union {
-			struct { Color color; } clear_color_op;
-			struct { float depth; } clear_depth_op;
-			struct { uint32_t stencil; } clear_stencil_op;
-			struct { RID instance; RID override_material; } draw_op;
-		}
-	};
-
 	RenderingDevice* device;
-	List<Command> commands;
 
 protected:
 	static void _bind_methods();
@@ -102,23 +79,15 @@ public:
 	void draw_multimesh(const RID p_multimesh, const Ref<Material> &p_override_material);
 	void draw_fullscreen_quad(const RID p_material);
 	
-	// delegation operations, with customizations for overrides
 	void draw_canvas_items(CullingFlags p_flags = CULLING_EVERYTHING, const Ref<Material> &p_override_material);
 	void draw_canvas_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
 	void draw_spatial_items(CullingFlags p_flags = CULLING_EVERYTHING, const Ref<Material> &p_override_material);
 	void draw_spatial_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
 
-	// general operations
-	void reset();
-	void flush();
-
-	RenderingQueue(RenderingDevice* p_device);
+	RenderContext(RenderingDevice* p_device);
 }
 
 // A configurable rendering pipeline.
-//
-// This pipeline is used to define the stages of the renderer using Script or GDExtension.
-// The pipeline only works with the RenderingDevice architecture via the RenderingQueue interface.
 class RenderPipeline : public Resource {
 	GDCLASS(RenderPipeline, Resource);
 
@@ -139,11 +108,9 @@ protected:
 public:
 	virtual bool is_enabled() const { return true; }
 	
-	virtual void begin_frame(RenderCommandQueue& p_queue) {}
-	virtual void begin_viewport(RID p_viewport, RenderCommandQueue& p_queue) {}
-	virtual void render_viewport(RID p_viewport, RenderCommandQueue& p_queue) {}
-	virtual void end_viewport(RID p_viewport, RenderCommandQueue& p_queue) {}
-	virtual void end_frame(RIRenderCommandQueue& p_queue) {}
+	virtual void begin_viewport(RID p_viewport, RenderContext& p_context) {}
+	virtual void render_viewport(RID p_viewport, RenderContext& p_context) {}
+	virtual void end_viewport(RID p_viewport, RenderContext& p_context) {}
 };
 
 // A rendering pipeline with support for multiple passes per viewport.
