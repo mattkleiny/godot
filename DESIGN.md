@@ -17,8 +17,6 @@ It's implemented with the following ideas:
 * A `RenderPipeline` resource, which is a user-definable object (with properties) that can live in the project, or on a particular `SubViewport`.
 * A `RenderCommandQueue` object, which abstracts over the normal rendering operations performed by the `RenderingServer`.
 
-Furthermore, the existing rendering backends are refactored to honor this new model.
-
 Two new mechanisms
 * Delegation
 * Replacement
@@ -40,25 +38,24 @@ Two new mechanisms
 
 ## Related Issues
 
-- TODO
+- Closes #644 - [Add support for Customizable/Scriptable Render Pipelines](https://github.com/godotengine/godot-proposals/issues/644)
 
 ## Checklist
 
 - [ ] Code follows the project's coding standards.
-- [ ] Tests have been added/updated as necessary.
 - [ ] Documentation has been updated to reflect the changes.
-- [ ] All new and existing tests pass.
+- [ ] Tests have been added/updated as necessary.
+  - [ ] All new and existing tests pass.
 - [ ] An example project is published and provided.
 
 ## Remaining Work
 
 - [ ] Extract `RenderViewport` into pieces via the `RenderPipeline` interface.
 - [ ] Delegate to the `RenderPipeline` from the `RendererViewport` for all rendering operations.
-- [ ] Get a basic example project up and running.
-- [ ] Allow specifying a `RenderPipeline` on a per-project basis.
-- [ ] Allow specifying a `RenderPipeline` on a per-viewport basis.
+- [ ] Allow specifying a `RenderPipeline` on a:
+  - [ ] Per-project basis.
+  - [ ] Per-viewport basis.
 
-## Sneak Peak
+## Example
 
-- TODO: Add user-definable render graph preview.
 - TODO: Add radiance cascades demo using the new pipeline.

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="RenderPipeline" inherits="Resource" experimental="More customization of the rendering pipeline will be added in the future." xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Permits customization of the graphics rendering pipeline.
+	</brief_description>
+	<description>
+		The RenderPipeline resource is an extensible resource that allows you to customize the rendering pipeline of a viewport.		
+	</description>
+	<tutorials>
+	</tutorials>
+	<members>
+	</members>
+</class>
