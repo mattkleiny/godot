@@ -34,11 +34,10 @@
 #include "core/io/resource.h"
 
 class RenderingDeviceRD;
-class RenderingPipelineMethod;
 
 // A queue capable of storing rendering commands.
-class RenderingQueue : public Object {
-	GDCLASS(RenderingQueue, Object);
+class RenderingCommandQueue : public Object {
+	GDCLASS(RenderingCommandQueue, Object);
 
 	enum CullingFlags {
 		CULLING_FLAGS_NONE = 0,
@@ -46,15 +45,20 @@ class RenderingQueue : public Object {
 		CULLING_FLAGS_TRANSPARENT = 1 << 1,
 		CULLING_FLAGS_CANVAS = 1 << 2,
 		CULLING_FLAGS_SPATIAL = 1 << 3,
-		CULLING_FLAGS_PARTICLE = 1 << 4,
-		CULLING_EVERYTHING = 0xFFFFFFFF
+		CULLING_FLAGS_PARTICLE = 1 << 4
 	}
 
 	struct CullingSettings {
 		CullingFlags flags;
 		Plane[6] frustum;
 		bool has_frustum;
+
+		static CullingSettings DEFAULT = { CULLING_FLAGS_NONE, {}, false };
 	};
+
+	struct RenderSettings {
+		RID override_material;
+	}
 
 	struct Command {
 		enum {
@@ -63,35 +67,16 @@ class RenderingQueue : public Object {
 			COMMAND_CLEAR_STENCIL_BUFFER,
 			COMMAND_DRAW_MESH,
 			COMMAND_DRAW_MULTIMESH,
-		} type;
+			COMMAND_DRAW_SPRITE,
+			COMMAND_DRAW_PARTICLES,
+		} 
+		type;
 
 		union {
-			struct {
-				Color color;
-			}
-			clear_color_buffer;
-			
-			struct {
-				float depth;
-			}
-			clear_depth_buffer;
-			
-			struct {
-				uint32_t stencil;
-			}
-			clear_stencil_buffer;
-			
-			struct {
-				RID mesh;
-				RID custom_material;
-			}
-			draw_mesh;
-			
-			struct {
-				RID multimesh;
-				RID custom_material;
-			}
-			draw_multimesh;
+			struct { Color color; } clear_color_op;
+			struct { float depth; } clear_depth_op;
+			struct { uint32_t stencil; } clear_stencil_op;
+			struct { RID instance; RID override_material; } draw_op;
 		}
 	};
 
@@ -102,13 +87,25 @@ protected:
 	static void _bind_methods();
 
 public:
+	// standard rendering commands
 	void clear_color_buffer(const Color &p_color);
 	void clear_depth_buffer(float p_depth);
 	void clear_stencil_buffer(uint32_t p_stencil);
+	
+	void draw_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p_override_material);
+	void draw_multimesh(const Ref<MultiMesh> &p_multimesh, const Ref<Material> &p_override_material);
+	
+	void set_render_target(const Ref<RenderTarget> &p_render_target);
+	void set_default_render_target();
 
-	void draw_mesh(const RID &p_mesh, const RID p_custom_material = RID());
-	void draw_multimesh(const RID &p_multimesh, const RID p_custom_material = RID());
+	// delegation operations, with customizations for overrides
+	void draw_canvas_items(CullingFlags p_flags = CULLING_EVERYTHING, const Ref<Material> &p_override_material);
+	void draw_canvas_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
+	void draw_spatial_items(CullingFlags p_flags = CULLING_EVERYTHING, const Ref<Material> &p_override_material);
+	void draw_spatial_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
+	void draw_fullscreen_quad(const Ref<Material> &p_material);
 
+	// general operations
 	void reset();
 	void flush();
 
@@ -123,13 +120,11 @@ public:
 class RenderingPipeline : public Resource {
 	GDCLASS(RenderingPipeline, Resource);
 
-	friend class RenderingPipelineMethod;
-
 protected:
 	static void _bind_methods();
 
 public:
-	virtual void render_camera(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr);
+	virtual void render_viewport(RID p_viewport, RenderingCommandQueue& p_queue);
 };
 
 // A rendering method that employs a rendering pipeline.
@@ -138,7 +133,7 @@ class RenderingPipelineMethod : public RenderingMethod {
 	HashMap<RID, Ref<RenderingQueue>> queues;
 
 public:
-	virtual void render_camera(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) override;
+	virtual void render_viewport(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) override;
 
 	RenderingPipelineMethod(Ref<RenderingPipeline>& p_pipeline);
 };

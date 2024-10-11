@@ -61,10 +61,9 @@ public:
 	static RendererGI *gi;
 	static RendererFog *fog;
 	static RendererCameraAttributes *camera_attributes;
+	static RendererCanvasCull *canvas;
 	static RendererCanvasRender *canvas_render;
 	static RendererCompositor *rasterizer;
-
-	static RendererCanvasCull *canvas;
 	static RendererViewport *viewport;
 	static RenderingMethod *scene;
 };

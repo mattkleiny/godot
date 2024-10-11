@@ -30,72 +30,101 @@
 
 #include "rendering_pipeline.h"
 
-// RenderingQueue
+// RenderingCommandQueue
 
-void RenderingQueue::clear_color_buffer(const Color &p_color) {
+void RenderingCommandQueue::clear_color_buffer(const Color &p_color) {
   Command command;
 
   command.type = COMMAND_CLEAR_COLOR_BUFFER;
-  command.clear_color_buffer.color = p_color;
+  command.clear_color_op.color = p_color;
 
   commands.push_back(command);
 }
 
-void RenderingQueue::clear_depth_buffer(float p_depth) {
+void RenderingCommandQueue::clear_depth_buffer(float p_depth) {
   Command command;
 
-  command.type = COMMAND_CLEAR_DEPTH_BUFFER;
-  command.clear_depth_buffer.depth = p_depth;
+  command.type = Command::COMMAND_CLEAR_DEPTH_BUFFER;
+  command.clear_depth_op.depth = p_depth;
 
   commands.push_back(command);
 }
 
-void RenderingQueue::clear_stencil_buffer(uint32_t p_stencil) {
+void RenderingCommandQueue::clear_stencil_buffer(uint32_t p_stencil) {
   Command command;
 
-  command.type = COMMAND_CLEAR_STENCIL_BUFFER;
-  command.clear_stencil_buffer.stencil = p_stencil;
+  command.type = Command::COMMAND_CLEAR_STENCIL_BUFFER;
+  command.clear_stencil_op.stencil = p_stencil;
 
   commands.push_back(command);
 }
-void RenderingQueue::draw_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p_custom_material) {
+
+void RenderingCommandQueue::draw_mesh(const Ref<Mesh> &p_mesh, const Ref<Material> &p_override_material) {
   Command command;
 
-  command.type = COMMAND_DRAW_MESH;
-  command.draw_mesh.CommandType = p_mesh;
-  command.draw_mesh.custom_material = p_custom_material;
+  command.type = Command::COMMAND_DRAW_MESH;
+  command.draw_mesh.instance = p_mesh;
+  command.draw_mesh.override_material = p_override_material;
 
   commands.push_back(command);
 }
 
-void RenderingQueue::draw_multimesh(const Ref<MultiMesh> &p_multimesh, const Ref<Material> &p_custom_material) {
+void RenderingCommandQueue::draw_multimesh(const Ref<MultiMesh> &p_multimesh, const Ref<Material> &p_override_material) {
   Command command;
 
-  command.type = COMMAND_DRAW_MULTIMESH;
-  command.draw_multimesh.multimesh = p_multimesh;
-  command.draw_multimesh.custom_material = p_custom_material;
+  command.type = Command::COMMAND_DRAW_MULTIMESH;
+  command.draw_op.instance = p_multimesh;
+  command.draw_op.override_material = p_override_material;
 
   commands.push_back(command);
 }
 
-void RenderingQueue::reset() {
+void RenderingCommandQueue::draw_canvas_items(RenderingCommandQueue::CullingFlags p_flags, const Ref<Material> &p_override_material) {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::draw_canvas_items_ex(RenderingCommandQueue::CullingSettings p_culling_settings, RenderingCommandQueue::RenderSettings p_render_settings) {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::draw_spatial_items(RenderingCommandQueue::CullingFlags p_flags, const Ref<Material> &p_override_material) {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::draw_spatial_items_ex(RenderingCommandQueue::CullingSettings p_culling_settings, RenderingCommandQueue::RenderSettings p_render_settings) {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::draw_fullscreen_quad(const Ref<Material> &p_material) {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::set_render_target(const Ref<RenderTarget> &p_render_target) {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::set_default_render_target() {
+  // TODO: implement me
+}
+
+void RenderingCommandQueue::reset() {
   commands.clear();
 }
 
-void RenderingQueue::flush() {
+void RenderingCommandQueue::flush() {
   for (int i = 0; i < commands.size(); i++) {
     Command &command = commands[i];
 
     switch (command.type) {
-      case CommandType::COMMAND_CLEAR_COLOR_BUFFER:
+      case Command::COMMAND_CLEAR_COLOR_BUFFER:
         break;
-      case CommandType::COMMAND_CLEAR_DEPTH_BUFFER:
+      case Command::COMMAND_CLEAR_DEPTH_BUFFER:
         break;
-      case CommandType::COMMAND_CLEAR_STENCIL_BUFFER:
+      case Command::COMMAND_CLEAR_STENCIL_BUFFER:
         break;
-      case CommandType::COMMAND_DRAW_MESH:
+      case Command::COMMAND_DRAW_MESH:
         break;
-      case CommandType::COMMAND_DRAW_MULTIMESH:
+      case Command::COMMAND_DRAW_MULTIMESH:
         break;
     }
   }
@@ -103,22 +132,26 @@ void RenderingQueue::flush() {
   reset();
 }
 
-void RenderingQueue::_bind_methods() {
-  ClassDB::bind_method(D_METHOD("clear_color_buffer", "color"), &RenderingQueue::clear_color_buffer);
-  ClassDB::bind_method(D_METHOD("clear_depth_buffer", "depth"), &RenderingQueue::clear_depth_buffer);
-  ClassDB::bind_method(D_METHOD("clear_stencil_buffer", "stencil"), &RenderingQueue::clear_stencil_buffer);
+void RenderingCommandQueue::_bind_methods() {
+  ClassDB::bind_method(D_METHOD("clear_color_buffer", "color"), &RenderingCommandQueue::clear_color_buffer);
+  ClassDB::bind_method(D_METHOD("clear_depth_buffer", "depth"), &RenderingCommandQueue::clear_depth_buffer);
+  ClassDB::bind_method(D_METHOD("clear_stencil_buffer", "stencil"), &RenderingCommandQueue::clear_stencil_buffer);
 
-  ClassDB::bind_method(D_METHOD("draw_mesh", "mesh", "custom_material"), &RenderingQueue::draw_mesh);
-  ClassDB::bind_method(D_METHOD("draw_multimesh", "multimesh", "custom_material"), &RenderingQueue::draw_multimesh);
+  ClassDB::bind_method(D_METHOD("draw_mesh", "mesh", "override_material"), &RenderingCommandQueue::draw_mesh);
+  ClassDB::bind_method(D_METHOD("draw_multimesh", "multimesh", "override_material"), &RenderingCommandQueue::draw_multimesh);
+  ClassDB::bind_method(D_METHOD("draw_sprite", "sprite", "override_material"), &RenderingCommandQueue::draw_multimesh);
+  ClassDB::bind_method(D_METHOD("draw_particles", "particesl", "override_material"), &RenderingCommandQueue::draw_multimesh);
+
+  ClassDB::bind_method(D_METHOD("flush"), &RenderingCommandQueue::flush);
+  ClassDB::bind_method(D_METHOD("reset"), &RenderingCommandQueue::reset);
 }
 
-RenderingQueue::RenderingQueue(RenderingDeviceRD* p_device) {
+RenderingCommandQueue::RenderingCommandQueue(RenderingDeviceRD* p_device) {
   device = p_device;
 }
 
 // RenderingPipeline
-
-void RenderingPipeline::render_camera(const Ref<RenderSceneBuffers> &p_render_buffers, RID p_camera, RID p_scenario, RID p_viewport, Size2 p_viewport_size, uint32_t p_jitter_phase_count, float p_mesh_lod_threshold, RID p_shadow_atlas, Ref<XRInterface> &p_xr_interface, RenderInfo *r_render_info = nullptr) {
+void RenderingPipeline::render_viewport(RID p_viewport, RenderingCommandQueue& p_queue) {
   // TODO: invoke the script
 }
 
@@ -140,8 +173,7 @@ void RenderingPipelineMethod::render_camera(const Ref<RenderSceneBuffers> &p_ren
   RenderingQueue &queue = queues[p_camera];
   queue->clear();
 
-  // render the camera
-  pipeline->render_camera(queue, p_render_buffers, p_camera, p_scenario, p_viewport, p_viewport_size, p_jitter_phase_count, p_mesh_lod_threshold, p_shadow_atlas, p_xr_interface, r_render_info);
+  // TODO: render the camera
 }
 
 RenderingPipelineMethod::RenderingPipelineMethod(Ref<RenderingPipeline>& p_pipeline) {
