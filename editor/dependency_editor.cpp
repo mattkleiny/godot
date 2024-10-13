@@ -588,8 +588,8 @@ void DependencyRemoveDialog::ok_pressed() {
 		} else if (files_to_delete[i] == String(GLOBAL_GET("rendering/environment/defaults/default_environment"))) {
 			ProjectSettings::get_singleton()->set("rendering/environment/defaults/default_environment", "");
 			project_settings_modified = true;
-		} else if (files_to_delete[i] == String(GLOBAL_GET("rendering/renderer_default_pipeline"))) {
-			ProjectSettings::get_singleton()->set("rendering/renderer_default_pipeline", "");
+		} else if (files_to_delete[i] == String(GLOBAL_GET("rendering/renderer/default_render_pipeline"))) {
+			ProjectSettings::get_singleton()->set("rendering/renderer/default_render_pipeline", "");
 			project_settings_modified = true;
 		} else if (files_to_delete[i] == String(GLOBAL_GET("display/mouse_cursor/custom_image"))) {
 			ProjectSettings::get_singleton()->set("display/mouse_cursor/custom_image", "");

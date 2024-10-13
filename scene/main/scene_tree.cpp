@@ -606,6 +606,29 @@ bool SceneTree::process(double p_time) {
 	_call_idle_callbacks();
 
 #ifdef TOOLS_ENABLED
+	if (Engine::get_singleton()->is_editor_hint()) {
+		//simple hack to reload render pipeline environment if it changed from editor
+		String pipeline_path = GLOBAL_GET(SNAME("rendering/renderer/default_render_pipeline"));
+		pipeline_path = pipeline_path.strip_edges();
+		String cpath;
+		Ref<RenderPipeline> fallback = RS::get_singleton()->viewport_get_fallback_render_pipeline();
+		if (fallback.is_valid()) {
+			cpath = fallback->get_path();
+		}
+		if (cpath != pipeline_path) {
+			if (pipeline_path.is_empty()) {
+				fallback = ResourceLoader::load(pipeline_path);
+				if (fallback.is_null()) {
+					//could not load fallback, set as empty
+					ProjectSettings::get_singleton()->set("rendering/renderer/default_render_pipeline", "");
+				}
+			} else {
+				fallback.unref();
+			}
+			RS::get_singleton()->viewport_set_fallback_render_pipeline(fallback);
+		}
+	}
+
 #ifndef _3D_DISABLED
 	if (Engine::get_singleton()->is_editor_hint()) {
 		//simple hack to reload fallback environment if it changed from editor
@@ -1912,7 +1935,7 @@ SceneTree::SceneTree() {
 	root->set_sdf_scale(sdf_scale);
 
 	// Load fallback render pipeline
-	String pipeline_path = GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/renderer_default_pipeline", PROPERTY_HINT_FILE, "*.tres"), "");
+	String pipeline_path = GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/renderer/default_render_pipeline", PROPERTY_HINT_FILE, "*.tres"), "");
 	pipeline_path = pipeline_path.strip_edges();
 	if (!pipeline_path.is_empty()) {
 		Ref<RenderPipeline> pipeline = ResourceLoader::load(pipeline_path);
@@ -1921,10 +1944,10 @@ SceneTree::SceneTree() {
 		} else {
 			if (Engine::get_singleton()->is_editor_hint()) {
 				// File was erased, clear the field.
-				ProjectSettings::get_singleton()->set("rendering/renderer_default_pipeline", "");
+				ProjectSettings::get_singleton()->set("rendering/renderer/default_render_pipeline", "");
 			} else {
 				// File was erased, notify user.
-				ERR_PRINT("Default Render Pipeline as specified in the project setting \"rendering/renderer_default_pipeline\" could not be loaded.");
+				ERR_PRINT("Default Render Pipeline as specified in the project setting \"rendering/renderer/default_render_pipeline\" could not be loaded.");
 			}
 		}
 	}

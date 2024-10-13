@@ -916,6 +916,10 @@ void RendererViewport::viewport_set_fallback_render_pipeline(const Ref<RenderPip
 	fallback_render_pipeline = p_pipeline;
 }
 
+Ref<RenderPipeline> RendererViewport::viewport_get_fallback_render_pipeline() const {
+	return fallback_render_pipeline;
+}
+
 void RendererViewport::viewport_initialize(RID p_rid) {
 	viewport_owner.initialize_rid(p_rid);
 	Viewport *viewport = viewport_owner.get_or_null(p_rid);

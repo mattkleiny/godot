@@ -228,6 +228,7 @@ public:
 
 	void viewport_set_render_pipeline(RID p_viewport, const Ref<RenderPipeline> &p_pipeline);
 	void viewport_set_fallback_render_pipeline(const Ref<RenderPipeline> &p_pipeline);
+	Ref<RenderPipeline> viewport_get_fallback_render_pipeline() const;
 
 	void viewport_set_use_xr(RID p_viewport, bool p_use_xr);
 	void viewport_set_size(RID p_viewport, int p_width, int p_height);
