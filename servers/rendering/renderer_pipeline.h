@@ -28,11 +28,12 @@
 /* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
 /**************************************************************************/
 
-#ifndef RENDERING_PIPELINE_H
-#define RENDERING_PIPELINE_H
+#ifndef RENDERER_PIPELINE_H
+#define RENDERER_PIPELINE_H
 
 #include "core/io/resource.h"
 #include "core/templates/vector.h"
+#include "core/variant/binder_common.h"
 
 class RenderingDevice;
 class Viewport;
@@ -42,6 +43,7 @@ class Material;
 class RenderContext : public Object {
 	GDCLASS(RenderContext, Object);
 
+public:
 	enum CullingFlags {
 		CULLING_FLAGS_NONE = 0,
 		CULLING_FLAGS_OPAQUE = 1 << 0,
@@ -51,6 +53,7 @@ class RenderContext : public Object {
 		CULLING_FLAGS_PARTICLE = 1 << 4
 	};
 
+private:
 	struct CullingSettings {
 		CullingFlags flags;
 		Plane frustum[6];
@@ -89,6 +92,8 @@ public:
 	RenderContext(RenderingDevice *p_device);
 };
 
+VARIANT_ENUM_CAST(RenderContext::CullingFlags);
+
 // A configurable rendering pipeline.
 class RenderPipeline : public Resource {
 	GDCLASS(RenderPipeline, Resource);
@@ -97,7 +102,7 @@ protected:
 	static void _bind_methods();
 
 public:
-	virtual void render_viewport(const Viewport &p_viewport);
+	virtual void render_viewport(Viewport *p_viewport);
 };
 
 // A render pass in a multi-pass rendering pipeline.
@@ -110,9 +115,9 @@ protected:
 public:
 	virtual bool is_enabled() const { return true; }
 
-	virtual void begin_viewport(RID p_viewport, RenderContext &p_context) {}
-	virtual void render_viewport(RID p_viewport, RenderContext &p_context) {}
-	virtual void end_viewport(RID p_viewport, RenderContext &p_context) {}
+	virtual void begin_viewport(Viewport *p_viewport, RenderContext &p_context) {}
+	virtual void render_viewport(Viewport *p_viewport, RenderContext &p_context) {}
+	virtual void end_viewport(Viewport *p_viewport, RenderContext &p_context) {}
 };
 
 // A rendering pipeline with support for multiple passes per viewport.
@@ -132,7 +137,7 @@ public:
 	void add_pass(const Ref<RenderPass> &p_pass);
 	void remove_pass(int p_index);
 
-	virtual void render_viewport(const Viewport &p_viewport) override;
+	virtual void render_viewport(Viewport *p_viewport) override;
 };
 
-#endif // RENDERING_PIPELINE_H
+#endif // RENDERER_PIPELINE_H

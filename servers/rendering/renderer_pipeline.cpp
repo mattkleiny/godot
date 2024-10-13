@@ -32,6 +32,7 @@
 
 #include "core/templates/rid.h"
 #include "scene/main/viewport.h"
+#include "servers/rendering/rendering_device.h"
 
 // RenderContext
 
@@ -104,12 +105,9 @@ void RenderContext::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("clear_depth_buffer", "depth"), &RenderContext::clear_depth_buffer);
 	ClassDB::bind_method(D_METHOD("clear_stencil_buffer", "stencil"), &RenderContext::clear_stencil_buffer);
 
-	ClassDB::bind_method(D_METHOD("draw_canvas_item", "canvas_item", "override_material"), &RenderContext::draw_canvas_item);
-	ClassDB::bind_method(D_METHOD("draw_instance", "instance", "override_material"), &RenderContext::draw_instance);
 	ClassDB::bind_method(D_METHOD("draw_mesh", "mesh", "override_material"), &RenderContext::draw_mesh);
 	ClassDB::bind_method(D_METHOD("draw_multimesh", "multimesh", "override_material"), &RenderContext::draw_multimesh);
 	ClassDB::bind_method(D_METHOD("draw_fullscreen_quad", "material"), &RenderContext::draw_fullscreen_quad);
-
 	ClassDB::bind_method(D_METHOD("draw_canvas_items", "flags", "override_material"), &RenderContext::draw_canvas_items);
 	ClassDB::bind_method(D_METHOD("draw_spatial_items", "flags", "override_material"), &RenderContext::draw_spatial_items);
 }
@@ -120,7 +118,7 @@ RenderContext::RenderContext(RenderingDevice *p_device) {
 
 // RenderPipeline
 
-void RenderPipeline::render_viewport(const Viewport &p_viewport) {
+void RenderPipeline::render_viewport(Viewport *p_viewport) {
 	// TODO: invoke the script
 }
 
@@ -152,28 +150,30 @@ void MultiPassRenderPipeline::remove_pass(int p_index) {
 	passes.remove_at(p_index);
 }
 
-void MultiPassRenderPipeline::render_viewport(const Viewport &p_viewport) {
+void MultiPassRenderPipeline::render_viewport(Viewport *p_viewport) {
+	RenderContext context(RD::get_singleton());
+
 	for (int i = 0; i < passes.size(); i++) {
-		Ref<RenderPass> pass = passes.get(i);
+		const Ref<RenderPass> &pass = passes[i];
 
 		if (pass.is_valid() && pass->is_enabled()) {
-			pass->begin_viewport(p_viewport, p_context);
+			pass->begin_viewport(p_viewport, context);
 		}
 	}
 
 	for (int i = 0; i < passes.size(); i++) {
-		Ref<RenderPass> pass = passes.get(i);
+		const Ref<RenderPass> &pass = passes[i];
 
 		if (pass.is_valid() && pass->is_enabled()) {
-			pass->render_viewport(p_viewport, p_context);
+			pass->render_viewport(p_viewport, context);
 		}
 	}
 
 	for (int i = 0; i < passes.size(); i++) {
-		Ref<RenderPass> pass = passes.get(i);
+		const Ref<RenderPass> &pass = passes[i];
 
 		if (pass.is_valid() && pass->is_enabled()) {
-			pass->end_viewport(p_viewport, p_context);
+			pass->end_viewport(p_viewport, context);
 		}
 	}
 }

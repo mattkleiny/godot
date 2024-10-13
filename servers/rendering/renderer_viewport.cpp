@@ -281,10 +281,9 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 		DisplayServer::get_singleton()->gl_window_make_current(p_viewport->viewport_to_screen);
 	}
 
-	
 	// if there is a pipeline provided on the viewport, delegate to it
-	Ref<RenderPipeline> pipeline = p_viewport->get_pipeline();
-	
+	Ref<RenderPipeline> &pipeline = p_viewport->render_pipeline;
+
 	if (pipeline.is_valid()) {
 		_draw_viewport_pipeline(p_viewport, pipeline);
 		// TODO: if there is NO viewport specified, use the project settings
@@ -300,7 +299,7 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 	}
 }
 
-void RendererViewport::_draw_viewport_default(Viewport* p_viewport) {
+void RendererViewport::_draw_viewport_default(Viewport *p_viewport) {
 	// TODO: move this to RenderCommandQueue
 
 	/* Camera should always be BEFORE any other 3D */
@@ -695,9 +694,9 @@ void RendererViewport::_draw_viewport_default(Viewport* p_viewport) {
 	}
 }
 
-
-void RendererViewport::_draw_viewport_pipeline(Viewport* p_viewport, RenderPipeline* p_pipeline) {
-	p_pipeline->render_viewport(p_viewport);
+void RendererViewport::_draw_viewport_pipeline(Viewport *p_viewport, Ref<RenderPipeline> &p_pipeline) {
+	// TODO: make this work
+	// p_pipeline->render_viewport(p_viewport);
 }
 
 void RendererViewport::draw_viewports(bool p_swap_buffers) {
@@ -905,6 +904,13 @@ void RendererViewport::draw_viewports(bool p_swap_buffers) {
 
 RID RendererViewport::viewport_allocate() {
 	return viewport_owner.allocate_rid();
+}
+
+void RendererViewport::viewport_set_render_pipeline(RID p_viewport, const Ref<RenderPipeline> &p_pipeline) {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	ERR_FAIL_NULL(viewport);
+
+	viewport->render_pipeline = p_pipeline;
 }
 
 void RendererViewport::viewport_initialize(RID p_rid) {

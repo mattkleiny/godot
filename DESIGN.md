@@ -8,7 +8,7 @@ This pull request introduces a rendering pipeline abstraction to the project. Th
 
 The primary motivation for this change is to improve the modularity and flexibility of the rendering system. By abstracting the rendering pipeline, we can more easily swap out different rendering strategies without affecting the rest of the application.
 
-The strategies themselves can either be sourced from **Script** code (e.g. **GDScript**, **C#**, etc), via **GDExtension** (e.g. **Rust**, **Swift**, etc), or via new **engine modules**. It's a decoupling of core rendering steps from the process that instruments it. 
+The strategies themselves can either be sourced from **Script** code (e.g. **GDScript**, **C#**, etc), via **GDExtension** (e.g. **Rust**, **Swift**, etc), or via new **engine modules**. It's a decoupling of core rendering steps from the process that instruments it.
 
 This concept is very similar to the `ScriptableRenderPipeline` idea that Unity uses, in that it allows user-customization of the rendering engine.
 
@@ -55,6 +55,7 @@ Two new mechanisms
 - [ ] Allow specifying a `RenderPipeline` on a:
   - [ ] Per-project basis.
   - [ ] Per-viewport basis.
+- [ ] Fix the icons to work in different themes.
 
 ## Example
 

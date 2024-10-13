@@ -1084,6 +1084,21 @@ Rect2 Viewport::get_visible_rect() const {
 	return r;
 }
 
+Ref<RenderPipeline> Viewport::get_render_pipeline() const {
+	return render_pipeline;
+}
+
+void Viewport::set_render_pipeline(const Ref<RenderPipeline> &p_render_pipeline) {
+	ERR_MAIN_THREAD_GUARD;
+
+	if (render_pipeline == p_render_pipeline) {
+		return;
+	}
+
+	render_pipeline = p_render_pipeline;
+	RS::get_singleton()->viewport_set_render_pipeline(viewport, p_render_pipeline);
+}
+
 void Viewport::canvas_parent_mark_dirty(Node *p_node) {
 	ERR_MAIN_THREAD_GUARD;
 	bool request_update = gui.canvas_parents_with_dirty_order.is_empty();
@@ -4544,8 +4559,8 @@ void Viewport::_propagate_world_2d_changed(Node *p_node) {
 }
 
 void Viewport::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("set_pipeline", "pipeline"), &Viewport::set_pipeline);
-	ClassDB::bind_method(D_METHOD("get_pipeline"), &Viewport::get_pipeline);
+	ClassDB::bind_method(D_METHOD("set_render_pipeline", "render_pipeline"), &Viewport::set_render_pipeline);
+	ClassDB::bind_method(D_METHOD("get_render_pipeline"), &Viewport::get_render_pipeline);
 
 	ClassDB::bind_method(D_METHOD("set_world_2d", "world_2d"), &Viewport::set_world_2d);
 	ClassDB::bind_method(D_METHOD("get_world_2d"), &Viewport::get_world_2d);
@@ -4718,7 +4733,7 @@ void Viewport::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_vrs_texture", "texture"), &Viewport::set_vrs_texture);
 	ClassDB::bind_method(D_METHOD("get_vrs_texture"), &Viewport::get_vrs_texture);
 
-	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "pipeline", PROPERTY_HINT_RESOURCE_TYPE, "RenderPipeline"), "set_pipeline", "get_pipeline");
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "render_pipeline", PROPERTY_HINT_RESOURCE_TYPE, "RenderPipeline"), "set_render_pipeline", "get_render_pipeline");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "disable_3d"), "set_disable_3d", "is_3d_disabled");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "use_xr"), "set_use_xr", "is_using_xr");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "own_world_3d"), "set_use_own_world_3d", "is_using_own_world_3d");

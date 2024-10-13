@@ -33,6 +33,7 @@
 
 #include "scene/main/node.h"
 #include "scene/resources/texture.h"
+#include "servers/rendering/renderer_pipeline.h"
 
 #ifndef _3D_DISABLED
 class Camera3D;
@@ -51,7 +52,6 @@ class SceneTreeTimer;
 class Viewport;
 class Window;
 class World2D;
-class RenderPipeline;
 
 class ViewportTexture : public Texture2D {
 	GDCLASS(ViewportTexture, Texture2D);
@@ -225,7 +225,7 @@ public:
 private:
 	friend class ViewportTexture;
 
-	Ref<RenderPipeline> pipeline;
+	Ref<RenderPipeline> render_pipeline;
 
 	Viewport *parent = nullptr;
 	Viewport *gui_parent = nullptr; // Whose gui.tooltip_popup it is.
@@ -491,8 +491,8 @@ protected:
 	void _validate_property(PropertyInfo &p_property) const;
 
 public:
-	Ref<RenderPipeline> get_pipeline() const;
-	void set_pipeline(const Ref<RenderPipeline> &p_pipeline);
+	Ref<RenderPipeline> get_render_pipeline() const;
+	void set_render_pipeline(const Ref<RenderPipeline> &p_pipeline);
 
 	void canvas_parent_mark_dirty(Node *p_node);
 	void canvas_item_top_level_changed();

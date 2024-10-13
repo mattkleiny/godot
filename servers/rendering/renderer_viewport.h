@@ -34,6 +34,7 @@
 #include "core/templates/local_vector.h"
 #include "core/templates/rid_owner.h"
 #include "core/templates/self_list.h"
+#include "servers/rendering/renderer_pipeline.h"
 #include "servers/rendering/renderer_scene_render.h"
 #include "servers/rendering/rendering_method.h"
 #include "servers/rendering_server.h"
@@ -42,8 +43,6 @@
 #ifndef _3D_DISABLED
 #include "servers/xr/xr_interface.h"
 #endif // _3D_DISABLED
-
-class RenderPipeline;
 
 class RendererViewport {
 public:
@@ -73,6 +72,7 @@ public:
 		RID render_target;
 		RID render_target_texture;
 		Ref<RenderSceneBuffers> render_buffers;
+		Ref<RenderPipeline> render_pipeline;
 
 		RS::ViewportMSAA msaa_2d = RenderingServer::VIEWPORT_MSAA_DISABLED;
 		RS::ViewportMSAA msaa_3d = RenderingServer::VIEWPORT_MSAA_DISABLED;
@@ -213,8 +213,8 @@ private:
 	void _configure_3d_render_buffers(Viewport *p_viewport);
 	void _draw_3d(Viewport *p_viewport);
 	void _draw_viewport(Viewport *p_viewport);
-	void _draw_viewport_default(Viewport* p_viewport);
-	void _draw_viewport_pipeline(Viewport* p_viewport, RenderPipeline* p_pipelien);
+	void _draw_viewport_default(Viewport *p_viewport);
+	void _draw_viewport_pipeline(Viewport *p_viewport, Ref<RenderPipeline> &p_pipeline);
 
 	int occlusion_rays_per_thread = 512;
 
@@ -224,8 +224,8 @@ public:
 	RID viewport_allocate();
 	void viewport_initialize(RID p_rid);
 
+	void viewport_set_render_pipeline(RID p_viewport, const Ref<RenderPipeline> &p_pipeline);
 	void viewport_set_use_xr(RID p_viewport, bool p_use_xr);
-
 	void viewport_set_size(RID p_viewport, int p_width, int p_height);
 
 	void viewport_attach_to_screen(RID p_viewport, const Rect2 &p_rect = Rect2(), DisplayServer::WindowID p_screen = DisplayServer::MAIN_WINDOW_ID);
