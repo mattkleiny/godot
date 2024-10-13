@@ -281,14 +281,13 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 		DisplayServer::get_singleton()->gl_window_make_current(p_viewport->viewport_to_screen);
 	}
 
-	// if there is a pipeline provided on the viewport, delegate to it
-	Ref<RenderPipeline> &pipeline = p_viewport->render_pipeline;
-
-	if (pipeline.is_valid()) {
-		_draw_viewport_pipeline(p_viewport, pipeline);
-		// TODO: if there is NO viewport specified, use the project settings
+	// delegate to the appropriate render pipeline
+	Ref<RenderPipeline> &render_pipeline = p_viewport->render_pipeline;
+	if (render_pipeline.is_valid()) {
+		_draw_viewport_pipeline(p_viewport, render_pipeline);
+	} else if (fallback_render_pipeline.is_valid()) {
+		_draw_viewport_pipeline(p_viewport, fallback_render_pipeline);
 	} else {
-		// otherwise, use default behaviour
 		_draw_viewport_default(p_viewport);
 	}
 
@@ -911,6 +910,10 @@ void RendererViewport::viewport_set_render_pipeline(RID p_viewport, const Ref<Re
 	ERR_FAIL_NULL(viewport);
 
 	viewport->render_pipeline = p_pipeline;
+}
+
+void RendererViewport::viewport_set_fallback_render_pipeline(const Ref<RenderPipeline> &p_pipeline) {
+	fallback_render_pipeline = p_pipeline;
 }
 
 void RendererViewport::viewport_initialize(RID p_rid) {

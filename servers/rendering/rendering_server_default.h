@@ -680,6 +680,7 @@ public:
 	FUNC3(viewport_attach_to_screen, RID, const Rect2 &, int)
 	FUNC2(viewport_set_render_direct_to_screen, RID, bool)
 	FUNC2(viewport_set_render_pipeline, RID, const Ref<RenderPipeline> &)
+	FUNC1(viewport_set_fallback_render_pipeline, const Ref<RenderPipeline> &)
 
 	FUNC2(viewport_set_scaling_3d_mode, RID, ViewportScaling3DMode)
 	FUNC2(viewport_set_scaling_3d_scale, RID, float)

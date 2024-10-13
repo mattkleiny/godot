@@ -1911,6 +1911,24 @@ SceneTree::SceneTree() {
 	Viewport::SDFScale sdf_scale = Viewport::SDFScale(int(GLOBAL_DEF(PropertyInfo(Variant::INT, "rendering/2d/sdf/scale", PROPERTY_HINT_ENUM, "100%,50%,25%"), 1)));
 	root->set_sdf_scale(sdf_scale);
 
+	// Load fallback render pipeline
+	String pipeline_path = GLOBAL_DEF(PropertyInfo(Variant::STRING, "rendering/renderer_default_pipeline", PROPERTY_HINT_FILE, "*.tres"), "");
+	pipeline_path = pipeline_path.strip_edges();
+	if (!pipeline_path.is_empty()) {
+		Ref<RenderPipeline> pipeline = ResourceLoader::load(pipeline_path);
+		if (pipeline.is_valid()) {
+			RS::get_singleton()->viewport_set_fallback_render_pipeline(pipeline);
+		} else {
+			if (Engine::get_singleton()->is_editor_hint()) {
+				// File was erased, clear the field.
+				ProjectSettings::get_singleton()->set("rendering/renderer_default_pipeline", "");
+			} else {
+				// File was erased, notify user.
+				ERR_PRINT("Default Render Pipeline as specified in the project setting \"rendering/renderer_default_pipeline\" could not be loaded.");
+			}
+		}
+	}
+
 #ifndef _3D_DISABLED
 	{ // Load default fallback environment.
 		// Get possible extensions.

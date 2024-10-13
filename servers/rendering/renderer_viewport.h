@@ -206,6 +206,8 @@ public:
 
 	int num_viewports_with_motion_vectors = 0;
 
+	Ref<RenderPipeline> fallback_render_pipeline;
+
 private:
 	Vector<Viewport *> _sort_active_viewports();
 	void _viewport_set_size(Viewport *p_viewport, int p_width, int p_height, uint32_t p_view_count);
@@ -225,6 +227,8 @@ public:
 	void viewport_initialize(RID p_rid);
 
 	void viewport_set_render_pipeline(RID p_viewport, const Ref<RenderPipeline> &p_pipeline);
+	void viewport_set_fallback_render_pipeline(const Ref<RenderPipeline> &p_pipeline);
+
 	void viewport_set_use_xr(RID p_viewport, bool p_use_xr);
 	void viewport_set_size(RID p_viewport, int p_width, int p_height);
 
