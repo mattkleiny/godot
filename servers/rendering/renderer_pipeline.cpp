@@ -89,12 +89,24 @@ void RenderContext::draw_fullscreen_quad(RID p_material) {
 	// TODO: implement me
 }
 
+void RenderContext::draw_default_viewport() {
+	RenderingServer::get_singleton()->viewport_draw_default(viewport);
+}
+
 void RenderContext::set_render_target(RID p_render_target) {
 	// TODO: implement me
 }
 
 void RenderContext::set_default_render_target() {
 	// TODO: implement me
+}
+
+RenderContext *RenderContext::create(RID p_viewport) {
+	RenderContext *context = memnew(RenderContext);
+
+	context->viewport = p_viewport;
+
+	return context;
 }
 
 void RenderContext::_bind_methods() {
@@ -110,16 +122,14 @@ void RenderContext::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("draw_fullscreen_quad", "material"), &RenderContext::draw_fullscreen_quad);
 	ClassDB::bind_method(D_METHOD("draw_canvas_items", "flags", "override_material"), &RenderContext::draw_canvas_items);
 	ClassDB::bind_method(D_METHOD("draw_spatial_items", "flags", "override_material"), &RenderContext::draw_spatial_items);
-}
-
-RenderContext::RenderContext(RenderingDevice *p_device) {
-	device = p_device;
+	ClassDB::bind_method(D_METHOD("draw_default_viewport"), &RenderContext::draw_default_viewport);
 }
 
 // RenderPipeline
 
-void RenderPipeline::render_viewport(Viewport *p_viewport) {
+void RenderPipeline::render_viewport(RID p_viewport) {
 	// TODO: invoke the script
+	RenderingServer::get_singleton()->viewport_draw_default(p_viewport);
 }
 
 void RenderPipeline::_bind_methods() {
@@ -150,14 +160,14 @@ void MultiPassRenderPipeline::remove_pass(int p_index) {
 	passes.remove_at(p_index);
 }
 
-void MultiPassRenderPipeline::render_viewport(Viewport *p_viewport) {
-	RenderContext context(RD::get_singleton());
+void MultiPassRenderPipeline::render_viewport(RID p_viewport) {
+	RenderContext *context = RenderContext::create(p_viewport);
 
 	for (int i = 0; i < passes.size(); i++) {
 		const Ref<RenderPass> &pass = passes[i];
 
 		if (pass.is_valid() && pass->is_enabled()) {
-			pass->begin_viewport(p_viewport, context);
+			pass->begin_viewport(*context);
 		}
 	}
 
@@ -165,7 +175,7 @@ void MultiPassRenderPipeline::render_viewport(Viewport *p_viewport) {
 		const Ref<RenderPass> &pass = passes[i];
 
 		if (pass.is_valid() && pass->is_enabled()) {
-			pass->render_viewport(p_viewport, context);
+			pass->render_viewport(*context);
 		}
 	}
 
@@ -173,9 +183,11 @@ void MultiPassRenderPipeline::render_viewport(Viewport *p_viewport) {
 		const Ref<RenderPass> &pass = passes[i];
 
 		if (pass.is_valid() && pass->is_enabled()) {
-			pass->end_viewport(p_viewport, context);
+			pass->end_viewport(*context);
 		}
 	}
+
+	memdelete(context);
 }
 
 void MultiPassRenderPipeline::_bind_methods() {

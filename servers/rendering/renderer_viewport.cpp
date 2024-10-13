@@ -298,9 +298,14 @@ void RendererViewport::_draw_viewport(Viewport *p_viewport) {
 	}
 }
 
-void RendererViewport::_draw_viewport_default(Viewport *p_viewport) {
-	// TODO: move this to RenderCommandQueue
+void RendererViewport::viewport_draw_default(RID p_viewport) {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	if (viewport) {
+		_draw_viewport_default(viewport);
+	}
+}
 
+void RendererViewport::_draw_viewport_default(Viewport *p_viewport) {
 	/* Camera should always be BEFORE any other 3D */
 
 	bool can_draw_2d = !p_viewport->disable_2d && p_viewport->view_count == 1; // Stereo rendering does not support 2D, no depth data
@@ -694,8 +699,8 @@ void RendererViewport::_draw_viewport_default(Viewport *p_viewport) {
 }
 
 void RendererViewport::_draw_viewport_pipeline(Viewport *p_viewport, Ref<RenderPipeline> &p_pipeline) {
-	// TODO: make this work
-	// p_pipeline->render_viewport(p_viewport);
+	ERR_FAIL_COND(!p_pipeline.is_valid());
+	p_pipeline->render_viewport(p_viewport->self);
 }
 
 void RendererViewport::draw_viewports(bool p_swap_buffers) {

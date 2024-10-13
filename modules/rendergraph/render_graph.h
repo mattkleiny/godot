@@ -49,7 +49,7 @@ public:
 	bool is_root() const { return is_root_node; }
 	void set_root(bool p_root) { is_root_node = p_root; }
 
-	virtual void render_viewport(Viewport *p_viewport);
+	virtual void render_viewport(RID p_viewport);
 };
 
 // A graph that can be used to define a rendering pipeline
@@ -67,7 +67,7 @@ public:
 	void remove_node(const Ref<RenderGraphNode> &p_node);
 	Ref<RenderGraphNode> get_root_node() const;
 
-	virtual void render_viewport(Viewport *p_viewport);
+	virtual void render_viewport(RID p_viewport);
 };
 
 // A render pipeline backed by a render graph resource.
@@ -83,7 +83,7 @@ public:
 	void set_graph(const Ref<RenderGraph> &p_graph);
 	Ref<RenderGraph> get_graph() const;
 
-	virtual void render_viewport(Viewport *p_viewport) override;
+	virtual void render_viewport(RID p_viewport) override;
 };
 
 #endif // RENDER_GRAPH_H

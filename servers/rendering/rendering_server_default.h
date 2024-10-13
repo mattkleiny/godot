@@ -679,6 +679,8 @@ public:
 
 	FUNC3(viewport_attach_to_screen, RID, const Rect2 &, int)
 	FUNC2(viewport_set_render_direct_to_screen, RID, bool)
+
+	FUNC1(viewport_draw_default, RID)
 	FUNC2(viewport_set_render_pipeline, RID, const Ref<RenderPipeline> &)
 	FUNC1(viewport_set_fallback_render_pipeline, const Ref<RenderPipeline> &)
 	FUNC0RC(Ref<RenderPipeline>, viewport_get_fallback_render_pipeline)

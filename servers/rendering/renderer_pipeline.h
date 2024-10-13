@@ -64,7 +64,7 @@ private:
 		RID override_material;
 	};
 
-	RenderingDevice *device;
+	RID viewport;
 
 protected:
 	static void _bind_methods();
@@ -89,21 +89,12 @@ public:
 	void draw_spatial_items(CullingFlags p_flags = CULLING_FLAGS_NONE, RID p_override_material = RID());
 	void draw_spatial_items_ex(CullingSettings p_culling_settings, RenderSettings p_render_settings);
 
-	RenderContext(RenderingDevice *p_device);
+	void draw_default_viewport();
+
+	static RenderContext* create(RID p_viewport);
 };
 
 VARIANT_ENUM_CAST(RenderContext::CullingFlags);
-
-// A configurable rendering pipeline.
-class RenderPipeline : public Resource {
-	GDCLASS(RenderPipeline, Resource);
-
-protected:
-	static void _bind_methods();
-
-public:
-	virtual void render_viewport(Viewport *p_viewport);
-};
 
 // A render pass in a multi-pass rendering pipeline.
 class RenderPass : public Resource {
@@ -115,9 +106,20 @@ protected:
 public:
 	virtual bool is_enabled() const { return true; }
 
-	virtual void begin_viewport(Viewport *p_viewport, RenderContext &p_context) {}
-	virtual void render_viewport(Viewport *p_viewport, RenderContext &p_context) {}
-	virtual void end_viewport(Viewport *p_viewport, RenderContext &p_context) {}
+	virtual void begin_viewport(RenderContext &p_context) {}
+	virtual void render_viewport(RenderContext &p_context) {}
+	virtual void end_viewport(RenderContext &p_context) {}
+};
+
+// A configurable rendering pipeline.
+class RenderPipeline : public Resource {
+	GDCLASS(RenderPipeline, Resource);
+
+protected:
+	static void _bind_methods();
+
+public:
+	virtual void render_viewport(RID p_viewport);
 };
 
 // A rendering pipeline with support for multiple passes per viewport.
@@ -137,7 +139,7 @@ public:
 	void add_pass(const Ref<RenderPass> &p_pass);
 	void remove_pass(int p_index);
 
-	virtual void render_viewport(Viewport *p_viewport) override;
+	virtual void render_viewport(RID p_viewport) override;
 };
 
 #endif // RENDERER_PIPELINE_H

@@ -209,7 +209,10 @@ void register_server_types() {
 	}
 
 	GDREGISTER_ABSTRACT_CLASS(RenderingDevice);
+	GDREGISTER_CLASS(RenderContext);
 	GDREGISTER_CLASS(RenderPipeline);
+	GDREGISTER_CLASS(RenderPass);
+	GDREGISTER_CLASS(MultiPassRenderPipeline);
 	GDREGISTER_CLASS(RDTextureFormat);
 	GDREGISTER_CLASS(RDTextureView);
 	GDREGISTER_CLASS(RDAttachmentFormat);

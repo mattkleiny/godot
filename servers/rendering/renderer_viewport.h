@@ -226,6 +226,7 @@ public:
 	RID viewport_allocate();
 	void viewport_initialize(RID p_rid);
 
+	void viewport_draw_default(RID p_rid);
 	void viewport_set_render_pipeline(RID p_viewport, const Ref<RenderPipeline> &p_pipeline);
 	void viewport_set_fallback_render_pipeline(const Ref<RenderPipeline> &p_pipeline);
 	Ref<RenderPipeline> viewport_get_fallback_render_pipeline() const;

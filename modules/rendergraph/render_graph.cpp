@@ -32,7 +32,7 @@
 
 // RenderGraphNode
 
-void RenderGraphNode::render_viewport(Viewport *p_viewport) {
+void RenderGraphNode::render_viewport(RID p_viewport) {
 }
 
 void RenderGraphNode::_bind_methods() {
@@ -66,7 +66,7 @@ Ref<RenderGraphNode> RenderGraph::get_root_node() const {
 	return Ref<RenderGraphNode>();
 }
 
-void RenderGraph::render_viewport(Viewport *p_viewport) {
+void RenderGraph::render_viewport(RID p_viewport) {
 	Ref<RenderGraphNode> root_node = get_root_node();
 
 	if (root_node.is_null()) {
@@ -93,7 +93,7 @@ Ref<RenderGraph> RenderGraphPipeline::get_graph() const {
 	return graph;
 }
 
-void RenderGraphPipeline::render_viewport(Viewport *p_viewport) {
+void RenderGraphPipeline::render_viewport(RID p_viewport) {
 	if (graph.is_null()) {
 		return;
 	}
